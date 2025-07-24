@@ -64,21 +64,21 @@ export default function HomePage() {
       {/* Main Content */}
       <div className="relative z-10 min-h-screen pb-24">
         <div className="container mx-auto px-4 py-8">
-          <div className="grid lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
+            <div className="flex flex-col lg:flex-row gap-8 max-w-6xl mx-auto">
             {/* Left Side - Image Upload */}
-            <div className="flex items-center justify-center">
+            <div className="flex-1 flex items-start justify-center">
               <div className="w-full max-w-md">
-                <ImageUploadClassifier onImageUpload={handleImageUpload} isLoading={isLoading} />
+              <ImageUploadClassifier onImageUpload={handleImageUpload} isLoading={isLoading} />
               </div>
             </div>
 
             {/* Right Side - Analysis */}
-            <div className="flex items-center justify-center">
+            <div className="flex-1 flex items-start justify-center">
               <div className="w-full max-w-md">
-                <AnalysisPanel result={classificationResult ?? undefined} isLoading={isLoading} />
+              <AnalysisPanel result={classificationResult ?? undefined} isLoading={isLoading} />
               </div>
             </div>
-          </div>
+            </div>
         </div>
       </div>await fetch
 
