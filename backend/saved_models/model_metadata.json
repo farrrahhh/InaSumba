@@ -1,0 +1,31 @@
+{
+  "model_name": "tenun_classifier",
+  "version": "1.0",
+  "created_date": "2025-07-25T04:36:41.532180",
+  "input_shape": [
+    224,
+    224,
+    3
+  ],
+  "classes": {
+    "ayam": 0,
+    "manusia": 1
+  },
+  "class_names": [
+    "ayam",
+    "manusia"
+  ],
+  "num_classes": 2,
+  "training_samples": 10,
+  "validation_samples": 1,
+  "best_val_accuracy": 1.0,
+  "best_val_loss": 0.16593456268310547,
+  "preprocessing": {
+    "rescale": 0.00392156862745098,
+    "target_size": [
+      224,
+      224
+    ]
+  },
+  "confidence_threshold": 75.0
+}
