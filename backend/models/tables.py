@@ -75,7 +75,12 @@ class Transaction(Base):
     transaction_id = Column(String(50), primary_key=True, index=True)
     user_id = Column(String(8), ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
     product_id = Column(String(50), ForeignKey("products.product_id", ondelete="CASCADE"), nullable=False)
+    address = Column(Text, nullable=False)
+    phone_number = Column(String(20), nullable=False)
+    resi = Column(String(100), nullable=True)
+    total_price = Column(Integer, nullable=False)
     status = Column(String(50), nullable=False)
+    transaction_date = Column(Date, nullable=False)
 
     user = relationship("User")
     product = relationship("Product", back_populates="transactions")
