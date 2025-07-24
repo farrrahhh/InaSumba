@@ -28,7 +28,7 @@ export default function RegisterPage() {
     setError('')
 
     try {
-      const response = await fetch('http://localhost:8000/auth/register', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -52,7 +52,7 @@ export default function RegisterPage() {
       } else {
         setError(data.detail || 'Registration failed')
       }
-    } catch (error) {
+    } catch {
       setError('Network error. Please try again.')
     } finally {
       setLoading(false)

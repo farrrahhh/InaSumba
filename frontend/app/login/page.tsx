@@ -22,7 +22,7 @@ export default function LoginPage() {
     setError('')
 
     try {
-      const response = await fetch('http://localhost:8000/auth/login', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -45,7 +45,7 @@ export default function LoginPage() {
       } else {
         setError(data.detail || 'Login failed')
       }
-    } catch (error) {
+    } catch {
       setError('Network error. Please try again.')
     } finally {
       setLoading(false)
@@ -111,7 +111,7 @@ export default function LoginPage() {
           </div>
 
           <div className="mt-4 text-center">
-            <span className="text-sm text-gray-600">Don't have an account? </span>
+            <span className="text-sm text-gray-600">Dont have an account? </span>
             <a href="/register" className="text-sm text-zinc-800 underline font-medium">
               Sign Up
             </a>
@@ -198,7 +198,7 @@ export default function LoginPage() {
               </div>
 
               <div className="text-center">
-                <span className="text-sm text-gray-600">Don't have an account? </span>
+                <span className="text-sm text-gray-600">Dont have an account? </span>
                 <a 
                   href="/register" 
                   className="text-sm text-gray-900 hover:text-gray-700 underline font-medium transition-colors"
