@@ -209,12 +209,13 @@ export default function ChatPage() {
               <ArrowLeft className="h-6 w-6" />
             </Button>
             <div className="flex items-center space-x-3">
-              <img
+              <Image
                 src="/images/INA.png"
                 alt="INA NA"
                 width={35}
                 height={35}
                 className="w-10 h-10 rounded-full object-cover"
+                priority
               />
               <div>
                 <h1 className="text-white font-semibold text-lg">Ina Na</h1>
@@ -238,7 +239,7 @@ export default function ChatPage() {
             <div key={message.id} className={`relative z-30 flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}>
               <div className="flex items-start space-x-2 max-w-[80%] md:max-w-[60%]">
                 {message.sender === "bot" && (
-                  <img
+                  <Image
                     src="/images/INA.png"
                     alt="Ina Na"
                     width={32}
