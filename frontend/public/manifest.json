@@ -1,6 +1,6 @@
 {
-  "name": "budayaku",
-  "short_name": "budayaku",
+  "name": "inasumba",
+  "short_name": "inasumba",
   "description": "PWA for appreciating Indonesian culture",
   "start_url": "/",
   "display": "standalone",
