@@ -57,7 +57,7 @@ export default function HomePage() {
     <div className="min-h-screen relative overflow-hidden">
       {/* Background Image */}
       <div className="absolute inset-0 z-0">
-        <Image src="/images/background.png" alt="Nature Background" fill className="object-cover" priority />
+        <Image src="/images/background.jpg" alt="Nature Background" fill className="object-cover" priority />
         <div className="absolute inset-0 bg-green-100/20" />
       </div>
 

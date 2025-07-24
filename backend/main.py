@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from fastapi import Depends
 from routes.translator import translator_router
 from routes.classifier import classifier_router
+from routes.profile import profile_router
 
 app = FastAPI()
 origins = [
@@ -35,6 +36,7 @@ app.include_router(chat_router)
 app.include_router(ecommerce_router)
 app.include_router(translator_router)
 app.include_router(classifier_router)
+app.include_router(profile_router)
 
 
 def add_characters_to_db(db: Session):

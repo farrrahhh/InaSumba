@@ -34,20 +34,16 @@ export default function BottomNavbar() {
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50">
       <div className="relative bg-white px-6 py-4 rounded-t-full shadow-md border-t border-gray-200">
-        {/* Avatar Tengah */}
-        <div className="absolute inset-x-0 -top-8 flex justify-center">
-          <div
-            className="w-20 h-20 rounded-full bg-white shadow-lg border-4 border-white overflow-hidden cursor-pointer"
-            onClick={() => router.push("/home")}
+        {/* Tombol Chatbot Tengah */}
+        <div className="absolute inset-x-0 -top-6 flex justify-center">
+          <button
+            onClick={() => router.push("/chatbot")}
+            className="px-6 py-3 bg-white border border-gray-300 shadow-md rounded-full flex items-center space-x-2 active:scale-95 transition-transform duration-150"
           >
-            <Image
-              src="/images/avatar.png"
-              alt="Ina Avatar"
-              width={80}
-              height={80}
-              className="w-full h-full object-cover"
-            />
-          </div>
+            <span className="text-[15px] text-brown-700 font-semibold">
+              Start Conversation
+            </span>
+          </button>
         </div>
 
         {/* Navigasi */}
@@ -79,7 +75,7 @@ export default function BottomNavbar() {
             </button>
           ))}
 
-          <div className="w-20" /> {/* Spacer */}
+          <div className="w-20" /> {/* Spacer untuk tombol tengah */}
 
           {navItems.slice(2).map((item) => (
             <button
