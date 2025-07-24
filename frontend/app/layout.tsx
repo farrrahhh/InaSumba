@@ -48,6 +48,14 @@ export default function RootLayout({
             `,
           }}
         />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Ruslan+Display&display=swap"
+          rel="stylesheet"
+        />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
       </head>
       <body className="bg-white text-gray-800 dark:bg-gray-900 dark:text-white">
         <noscript>
