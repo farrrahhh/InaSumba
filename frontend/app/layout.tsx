@@ -1,6 +1,8 @@
 // app/layout.tsx
 import './globals.css'
 import type { Metadata } from 'next'
+import { Toaster } from 'sonner'
+import Script from 'next/script'
 
 export const metadata: Metadata = {
   title: 'InaSumba | Weaving The Cultures of Sumba',
@@ -8,7 +10,7 @@ export const metadata: Metadata = {
   manifest: '/manifest.json',
   themeColor: '#0f172a',
   icons: {
-    icon: '/logo.png', // ubah ke logo
+    icon: '/logo.png',
     apple: '/logo.png',
   },
 }
@@ -36,18 +38,15 @@ export default function RootLayout({
         <meta property="og:image" content="/logo.png" />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://inasumba.app/" />
-
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-              new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-              j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-              'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-              })(window,document,'script','dataLayer','GTM-XXXX');
-            `,
-          }}
-        />
+        <Script id="gtm-init" strategy="afterInteractive">
+          {`
+            (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+            })(window,document,'script','dataLayer','GTM-XXXX');
+          `}
+        </Script>
       </head>
       <body className="bg-white text-gray-800 dark:bg-gray-900 dark:text-white">
         <noscript>
@@ -60,6 +59,7 @@ export default function RootLayout({
         </noscript>
 
         {children}
+        <Toaster richColors /> 
       </body>
     </html>
   )
