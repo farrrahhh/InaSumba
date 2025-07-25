@@ -120,3 +120,25 @@
     @apply bg-background text-foreground;
   }
 }
+
+@media (max-width: 768px) {
+  .ina-na-mobile-bigger {
+    max-width:130% !important;
+    width:130% !important;
+  }
+}
+
+
+@media (max-width: 768px) {
+  .name-mobile-bigger {
+    max-width:200% !important;
+    width:200% !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .logo-mobile-bigger {
+    max-width:75% !important;
+    width:75% !important;
+  }
+}

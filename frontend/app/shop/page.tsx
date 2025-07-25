@@ -69,13 +69,14 @@ export default function ShopMain() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-     <section className="relative w-full h-[320px] md:h-[400px] lg:h-[480px] overflow-hidden">
+    <section className="relative w-full h-40 sm:h-100 md:h-80 lg:h-[480px] overflow-hidden">
       <Image
         src="/images/banner.png"
         alt="Banner"
         fill
-        className="object-cover object-top md:object-center w-full h-full"
+        className="object-cover object-top md:object-left w-full h-full"
         priority
+        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 1280px"
       />
     </section>
 

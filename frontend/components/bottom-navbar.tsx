@@ -33,7 +33,7 @@ export default function BottomNavbar() {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50">
-      <div className="relative bg-white px-6 py-4 rounded-t-full shadow-md border-t border-gray-200">
+      <div className="relative bg-white px-6 py-4 rounded-t-xl shadow-md border-t border-gray-200">
         {/* Avatar Tengah */}
         <div className="absolute inset-x-0 -top-8 flex justify-center">
           <div
