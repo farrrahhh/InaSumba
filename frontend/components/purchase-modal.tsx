@@ -34,26 +34,7 @@ export function PurchaseModal({ isOpen, onClose, product, quantity }: PurchaseMo
     e.preventDefault()
 
     try {
-      // Create purchase via API
-      const purchaseData = await api.createPurchase({
-        user_id: "USER001", // You can get this from auth context
-        product_id: product.id,
-        address: formData.address,
-        phone_number: formData.phoneNumber,
-      })
-
-      // Store purchase data for next page
-      const purchaseInfo = {
-        product,
-        quantity,
-        address: formData.address,
-        phoneNumber: formData.phoneNumber,
-        transaction_id: purchaseData.transaction_id,
-        total: purchaseData.total_price,
-      }
-
-      localStorage.setItem("purchaseData", JSON.stringify(purchaseInfo))
-      router.push("/payment-summary")
+      router.push("/payment")
       onClose()
     } catch (error) {
       console.error("Error creating purchase:", error)

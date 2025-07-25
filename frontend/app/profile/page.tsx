@@ -112,11 +112,8 @@ export default function ProfilePage() {
         </div>
         <div className="relative z-10 min-h-screen flex items-center justify-center">
           <div className="text-center">
-            <User className="h-12 w-12 mx-auto mb-4 text-red-500" />
-            <p className="text-red-600 mb-4">Failed to load profile</p>
-            <Link href="/">
-              <Button variant="outline">Go Back</Button>
-            </Link>
+            <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-amber-600" />
+            <p className="text-amber-800">Loading profile...</p>
           </div>
         </div>
       </div>

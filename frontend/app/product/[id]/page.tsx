@@ -10,8 +10,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Heart, ArrowLeft, Plus, Minus, Play, ChevronLeft, ChevronRight } from "lucide-react"
 import { PurchaseModal } from "@/components/purchase-modal"
 import { api, type ProductWithWeaver } from "@/lib/api"
+import { useRouter } from "next/navigation"
 
-// Helper function to convert Google Drive share URL to direct view URL
+
+
 const convertGoogleDriveUrl = (url: string): string | null => {
   if (!url) return null
   const match = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/)
@@ -28,9 +30,9 @@ type MediaItem = {
 }
 
 export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  // Unwrap params using React.use()
-  const { id } = use(params)
   
+  const { id } = use(params)
+  const router = useRouter()
   const [selectedMediaIndex, setSelectedMediaIndex] = useState(0)
   const [quantity, setQuantity] = useState(1)
   const [showPurchaseModal, setShowPurchaseModal] = useState(false)
@@ -536,7 +538,6 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             price: product.price,
           }}
           quantity={quantity}
-          
         />
       )}
     </div>
