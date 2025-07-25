@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Image from "next/image"
 import TextInputPanel from "@/components/text-input"
 import TranslationPanel from "@/components/translation-panel"
@@ -46,6 +46,14 @@ export default function HomePage() {
       setIsLoading(false)
     }
   }
+  useEffect(() => {
+      const isLoggedIn = localStorage.getItem("isLoggedIn")
+  
+      if (isLoggedIn !== "true") {
+        window.location.href = "/login"
+        return
+      }
+    }, [])
 
   const handleLanguageChange = async (language: "en" | "id") => {
     setSelectedLanguage(language)

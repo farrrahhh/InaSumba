@@ -7,6 +7,8 @@ import AnalysisPanel from "../../components/analysis-panel"
 import BottomNavbar from "@/components/bottom-navbar"
 import { classifyTenun } from "@/lib/classifier-api"
 import { useToast } from "@/hooks/use-toast"
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
 
 export default function HomePage() {
   type ClassificationResult = {
@@ -52,6 +54,14 @@ export default function HomePage() {
       setIsLoading(false)
     }
   }
+  useEffect(() => {
+    const isLoggedIn = localStorage.getItem("isLoggedIn")
+
+    if (isLoggedIn !== "true") {
+      window.location.href = "/login"
+      return
+    }
+  }, [])
 
   return (
     <div className="min-h-screen relative overflow-hidden">

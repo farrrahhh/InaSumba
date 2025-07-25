@@ -50,9 +50,14 @@ export interface ModelInfo {
 
 export async function classifyTenun(
   file: File,
-  userId = "3C69BD32",
+  userId?: string,
   imageQualityNotes?: string,
 ): Promise<ClassificationResponse> {
+  
+  if (!userId) {
+    userId = typeof window !== "undefined" ? localStorage.getItem("user_id") || "3C69BD32" : "3C69BD32"
+  }
+
   const formData = new FormData()
   formData.append("file", file)
   formData.append("user_id", userId)

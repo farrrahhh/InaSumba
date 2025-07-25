@@ -31,11 +31,16 @@ export interface SupportedLanguagesResponse {
 export async function translateText(
   sumbaText: string,
   targetLanguage: "en" | "id",
-  userId = "3C69BD32",
+  userId?: string,
   context?: string
 ): Promise<TranslateResponse> {
   if (!sumbaText.trim()) {
     throw new Error("Teks tidak boleh kosong")
+  }
+
+ 
+  if (!userId) {
+    userId = typeof window !== "undefined" ? localStorage.getItem("user_id") ?? undefined : undefined
   }
 
   const response = await fetch(`${API_BASE_URL}/translate`, {

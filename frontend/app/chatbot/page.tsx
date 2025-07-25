@@ -36,10 +36,7 @@ export default function ChatPage() {
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
 
   useEffect(() => {
-    let storedUserId = "3C69BD32"
-    if (!storedUserId) {
-      storedUserId = "3C69BD32"
-    }
+    const storedUserId = localStorage.getItem("user_id") || "3C69BD32"
     setUserId(storedUserId)
 
     const initialMessage: Message = {
@@ -50,6 +47,14 @@ export default function ChatPage() {
       timestamp: new Date(),
     }
     setMessages([initialMessage])
+  }, [])
+  useEffect(() => {
+    const isLoggedIn = localStorage.getItem("isLoggedIn")
+
+    if (isLoggedIn !== "true") {
+      window.location.href = "/login"
+      return
+    }
   }, [])
 
   useEffect(() => {

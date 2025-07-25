@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/lib/auth'
+import { Eye, EyeOff } from "lucide-react"
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -11,6 +12,7 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const router = useRouter()
   const { login } = useAuthStore()
+  const [showPassword, setShowPassword] = useState(false)
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -41,7 +43,13 @@ export default function LoginPage() {
           name: data.name,
           email: data.email
         })
-        router.push('/dashboard')
+        
+        localStorage.setItem('user_id', data.user_id)
+        localStorage.setItem('name', data.name)
+        localStorage.setItem('email', data.email)
+        // save udah login belum
+        localStorage.setItem('isLoggedIn', 'true')
+        router.push('/home')
       } else {
         setError(data.detail || 'Login failed')
       }
@@ -88,14 +96,22 @@ export default function LoginPage() {
           />
 
           <label className="block text-sm font-medium mb-1 text-gray-500">Password</label>
-          <input
-            type="password"
-            className="w-full mb-6 p-2 rounded border border-gray-400 text-gray-500"
-            placeholder="Enter your password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-
+          <div className="relative mb-6">
+            <input
+              type={showPassword ? "text" : "password"}
+              className="w-full p-2 rounded border border-gray-400 text-gray-500"
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute top-2 right-2 text-gray-600"
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
+          </div>
           <button
             className="w-full bg-zinc-800 text-white py-2 rounded hover:bg-zinc-700 transition disabled:opacity-50"
             onClick={handleLogin}
@@ -104,11 +120,7 @@ export default function LoginPage() {
             {loading ? 'Signing In...' : 'Sign In'}
           </button>
 
-          <div className="mt-4 text-center">
-            <a href="#" className="text-sm text-black underline">
-              Forgot password?
-            </a>
-          </div>
+          
 
           <div className="mt-4 text-center">
             <span className="text-sm text-gray-600">Dont have an account? </span>
@@ -169,14 +181,23 @@ export default function LoginPage() {
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                   Password
                 </label>
-                <input
-                  id="password"
-                  type="password"
-                  className="w-full px-4 py-3 border border-gray-300 text-gray-500 rounded-lg focus:ring-2 focus:ring-[#D1A266] focus:border-transparent outline-none transition-all"
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
+                <div className="relative">
+                  <input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    className="w-full px-4 py-3 border border-gray-300 text-gray-500 rounded-lg focus:ring-2 focus:ring-[#D1A266] focus:border-transparent outline-none transition-all"
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute top-3 right-3 text-gray-600"
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
               </div>
 
               <button
@@ -188,15 +209,7 @@ export default function LoginPage() {
                 {loading ? 'Signing In...' : 'Sign In'}
               </button>
 
-              <div className="text-center">
-                <a 
-                  href="#" 
-                  className="text-sm text-gray-900 hover:text-gray-700 underline transition-colors"
-                >
-                  Forgot password?
-                </a>
-              </div>
-
+              
               <div className="text-center">
                 <span className="text-sm text-gray-600">Dont have an account? </span>
                 <a 

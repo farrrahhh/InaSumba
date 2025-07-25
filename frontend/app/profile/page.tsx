@@ -18,12 +18,19 @@ export default function ProfilePage() {
   const { toast } = useToast()
   const router = useRouter()
 
-  // For demo purposes, using a static user ID
-  // In a real app, this would come from authentication context
-const userId = "3C69BD32"
+  const userId = localStorage.getItem("user_id")
 
   useEffect(() => {
     const loadProfile = async () => {
+      if (!userId) {
+        setIsLoading(false)
+        toast({
+          title: "User Not Found",
+          description: "No user ID found. Please sign in again.",
+          variant: "destructive",
+        })
+        return
+      }
       try {
         const profileData = await getProfile(userId)
         setProfile(profileData)
@@ -40,7 +47,15 @@ const userId = "3C69BD32"
     }
 
     loadProfile()
-  }, [toast])
+  }, [toast, userId])
+  useEffect(() => {
+    const isLoggedIn = localStorage.getItem("isLoggedIn")
+
+    if (isLoggedIn !== "true") {
+      window.location.href = "/login"
+      return
+    }
+  }, [])
 
   const handleProfileUpdate = (updatedProfile: ProfileResponse) => {
     setProfile(updatedProfile)
@@ -58,7 +73,7 @@ const userId = "3C69BD32"
     })
 
     // Redirect to home page or login page
-    router.push("/")
+    router.push("/login")
   }
 
   if (isLoading) {

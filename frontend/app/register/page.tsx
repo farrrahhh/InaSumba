@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/lib/auth'
 
+import { Eye, EyeOff } from "lucide-react"
+
 export default function RegisterPage() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -13,42 +15,55 @@ export default function RegisterPage() {
   const router = useRouter()
   const login = useAuthStore((s) => s.login)
 
+
   const handleRegister = async () => {
-    if (!name || !email || !password) {
-      setError('Please fill in all fields')
-      return
+    setNameError('')
+    setEmailError('')
+    setPasswordError('')
+    setError('')
+
+    let hasError = false
+
+    if (!name) {
+      setNameError('Name is required')
+      hasError = true
     }
 
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters long')
-      return
+    if (!email) {
+      setEmailError('Email is required')
+      hasError = true
+    } else {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+      if (!emailRegex.test(email)) {
+        setEmailError('Invalid email format')
+        hasError = true
+      }
     }
+
+    if (!password) {
+      setPasswordError('Password is required')
+      hasError = true
+    } else if (password.length < 6) {
+      setPasswordError('Password must be at least 6 characters')
+      hasError = true
+    }
+
+    if (hasError) return
 
     setLoading(true)
-    setError('')
 
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name,
-          email,
-          password
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password })
       })
 
       const data = await response.json()
 
       if (response.ok) {
-        login({
-          user_id: data.user_id,
-          name: data.name,
-          email: data.email
-        })
-        router.push('/chatbot')
+        login({ user_id: data.user_id, name: data.name, email: data.email })
+        router.push('/login')
       } else {
         setError(data.detail || 'Registration failed')
       }
@@ -58,6 +73,12 @@ export default function RegisterPage() {
       setLoading(false)
     }
   }
+
+  const [showPassword, setShowPassword] = useState(false)
+  const [nameError, setNameError] = useState('')
+  const [emailError, setEmailError] = useState('')
+  const [passwordError, setPasswordError] = useState('')
+
 
   return (
     <>
@@ -93,6 +114,7 @@ export default function RegisterPage() {
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
+          {nameError && <p className="text-sm text-red-500 mt-1">{nameError}</p>}
 
           <label className="block text-sm font-medium mb-1 text-gray-500">Email</label>
           <input
@@ -104,13 +126,27 @@ export default function RegisterPage() {
           />
 
           <label className="block text-sm font-medium mb-1 text-gray-500">Password</label>
+         <div className="relative">
           <input
-            type="password"
-            className="w-full mb-6 p-2 rounded border text-gray-500 border-gray-400 placeholder:font-medium"
-            placeholder="Your password (min. 6 characters)"
+            id="password"
+            type={showPassword ? 'text' : 'password'}
+            className={`w-full px-4 py-3 border rounded-lg text-gray-500 placeholder:font-medium focus:ring-2 focus:ring-[#D1A266] focus:border-transparent outline-none transition-all ${
+              passwordError ? 'border-red-500' : 'border-gray-300'
+            }`}
+            placeholder="Your password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute top-3 right-3 text-gray-600"
+          >
+            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+          </button>
+          {passwordError && <p className="text-sm text-red-500 mt-1">{passwordError}</p>}
+        </div>
+
 
           <button
             className="w-full bg-zinc-800 text-white py-2 rounded hover:bg-zinc-700 transition disabled:opacity-50"
@@ -172,6 +208,8 @@ export default function RegisterPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                 />
+                {nameError && <p className="text-sm text-red-500 mt-1">{nameError}</p>}
+                
               </div>
 
               <div>
@@ -181,25 +219,42 @@ export default function RegisterPage() {
                 <input
                   id="email"
                   type="email"
-                  className="w-full px-4 py-3 border text-gray-500 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#D1A266] focus:border-transparent outline-none transition-all placeholder:font-medium"
+                  className={`w-full px-4 py-3 border rounded-lg text-gray-500 placeholder:font-medium focus:ring-2 focus:ring-[#D1A266] focus:border-transparent outline-none transition-all ${
+                    emailError ? 'border-red-500' : 'border-gray-300'
+                  }`}
                   placeholder="Your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
+                {emailError && <p className="text-sm text-red-500 mt-1">{emailError}</p>}
+
               </div>
 
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                   Password
                 </label>
+                <div className="relative">
                 <input
                   id="password"
-                  type="password"
-                  className="w-full px-4 py-3 border text-gray-500 border-gray-300 rounded-lg focus:ring-2 focus:ring-[#D1A266] focus:border-transparent outline-none transition-all placeholder:font-medium"
+                  type={showPassword ? 'text' : 'password'}
+                  className={`w-full px-4 py-3 border rounded-lg text-gray-500 placeholder:font-medium focus:ring-2 focus:ring-[#D1A266] focus:border-transparent outline-none transition-all ${
+                    passwordError ? 'border-red-500' : 'border-gray-300'
+                  }`}
                   placeholder="Your password (min. 6 characters)"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute top-3 right-3 text-gray-600"
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+                {passwordError && <p className="text-sm text-red-500 mt-1">{passwordError}</p>}
+              </div>
+
               </div>
 
               <button

@@ -9,6 +9,13 @@ export default function ChatbotLanding() {
   const [isLoaded, setIsLoaded] = useState(false)
 
   useEffect(() => {
+    const isLoggedIn = localStorage.getItem("isLoggedIn")
+
+    if (isLoggedIn !== "true") {
+      window.location.href = "/login"
+      return
+    }
+
     setIsLoaded(true)
 
     // Register service worker for PWA
@@ -23,6 +30,8 @@ export default function ChatbotLanding() {
         })
     }
   }, [])
+
+
 
   const handleStartConversation = () => {
     window.location.href = "/chatbot"
