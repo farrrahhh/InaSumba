@@ -3,6 +3,8 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 from database.config import Base
+from sqlalchemy.dialects.postgresql import ARRAY
+
 
 # User Table
 class User(Base):
@@ -61,11 +63,29 @@ class Product(Base):
     name = Column(String(100), nullable=False)
     quantity = Column(Integer, nullable=False)
     price = Column(Integer, nullable=False)
+    category = Column(String(50), nullable=False)
     description = Column(Text, nullable=True)
+    meaning_motif = Column(Text, nullable=True)
+    long_description = Column(Text, nullable=True)
+    long_meaning_motif = Column(Text, nullable=True)
     video_url = Column(String(255), nullable=True)
     photo_url = Column(String(255), nullable=True)
-
+    weaver_id = Column(String(50), ForeignKey("weavers.weaver_id", ondelete="CASCADE"), nullable=False)
     transactions = relationship("Transaction", back_populates="product", cascade="all, delete-orphan")
+    weaver = relationship("Weaver", back_populates="products")
+
+# Weaver Table
+class Weaver(Base):
+    __tablename__ = "weavers"
+
+    weaver_id = Column(String(50), primary_key=True, index=True)
+    name = Column(String(100), nullable=False)
+    bio = Column(Text, nullable=True)
+    address = Column(Text, nullable=True)
+    phone_number = Column(String(20), nullable=True)
+    specialization = Column(ARRAY(String), nullable=True)
+
+    products = relationship("Product", back_populates="weaver", cascade="all, delete-orphan")
 
 
 # Transaction Table
@@ -75,6 +95,7 @@ class Transaction(Base):
     transaction_id = Column(String(50), primary_key=True, index=True)
     user_id = Column(String(8), ForeignKey("users.user_id", ondelete="CASCADE"), nullable=False)
     product_id = Column(String(50), ForeignKey("products.product_id", ondelete="CASCADE"), nullable=False)
+    quantity = Column(Integer, nullable=False)
     address = Column(Text, nullable=False)
     phone_number = Column(String(20), nullable=False)
     resi = Column(String(100), nullable=True)

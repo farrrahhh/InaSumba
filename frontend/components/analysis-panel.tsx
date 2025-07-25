@@ -77,7 +77,7 @@ export default function AnalysisPanel({ result, isLoading }: AnalysisPanelProps)
     <Card className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-green-100">
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-amber-800">Analysis</h3>
+            <h3 className="text-lg font-bold text-amber-800 text-center w-full">Analysis</h3>
           {result && (
             <Button
               variant="outline"

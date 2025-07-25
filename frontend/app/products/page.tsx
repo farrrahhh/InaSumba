@@ -146,7 +146,7 @@ export default function ProductsPage() {
             {/* Price Filter */}
             <select
               value={priceFilter}
-              onChange={(e) => setPriceFilter(e.target.value as any)}
+              onChange={(e) => setPriceFilter(e.target.value as "all" | "low" | "medium" | "high")}
               className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
             >
               <option value="all">All Prices</option>
@@ -158,7 +158,7 @@ export default function ProductsPage() {
             {/* Sort */}
             <select
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
+              onChange={(e) => setSortBy(e.target.value as "name" | "price-low" | "price-high")}
               className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
             >
               <option value="name">Sort by Name</option>
