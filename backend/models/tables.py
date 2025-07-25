@@ -61,7 +61,10 @@ class Product(Base):
     name = Column(String(100), nullable=False)
     quantity = Column(Integer, nullable=False)
     price = Column(Integer, nullable=False)
+    category = Column(String(50), nullable=False)
     description = Column(Text, nullable=True)
+    meaning_motif = Column(Text, nullable=True)
+    
     video_url = Column(String(255), nullable=True)
     photo_url = Column(String(255), nullable=True)
 

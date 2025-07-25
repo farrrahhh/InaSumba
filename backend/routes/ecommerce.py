@@ -16,7 +16,9 @@ class ProductResponse(BaseModel):
     name: str
     quantity: int
     price: int
+    category: str
     description: Optional[str]
+    meaning_motif: Optional[str]
     video_url: Optional[str]
     photo_url: Optional[str]
 
@@ -62,11 +64,10 @@ class TrackingResponse(BaseModel):
 
 def generate_random_string(length: int = 10) -> str:
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
-
 @ecommerce_router.get("/products", response_model=List[ProductResponse])
 async def get_all_products(db: Session = Depends(get_db)):
     try:
-        products = db.query(Product).all()
+        products = db.query(Product).filter(Product.quantity > 0).all()
         return products
     except Exception as e:
         raise HTTPException(
