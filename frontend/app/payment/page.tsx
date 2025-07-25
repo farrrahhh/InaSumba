@@ -14,9 +14,7 @@ const handleBack = () => {
 }
 
   const handleConfirmPayment = () => {
-    // Simple confirmation action
-    alert("Payment confirmed! Thank you.")
-    router.push("/")
+    router.push("/shop")
   }
 
   return (

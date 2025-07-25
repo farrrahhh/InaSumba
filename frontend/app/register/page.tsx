@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/lib/auth'
 
 import { Eye, EyeOff } from "lucide-react"
+import Image from 'next/image'
 
 export default function RegisterPage() {
   const [name, setName] = useState('')
@@ -88,13 +89,8 @@ export default function RegisterPage() {
           style={{ backgroundImage: "url('/bg-login.png')" }}
         ></div>
 
-        <div className="relative z-10 text-center text-white mb-8">
-          <h1 className="text-4xl font-bold mb-2">
-            BudayaKu
-          </h1>
-          <p className="text-lg font-light opacity-90">
-            Jelajah Waktu Nusantara
-          </p>
+        <div className="relative z-10 flex flex-col items-center">
+         <Image src="/images/logo.png" alt="InaSumba Logo" width={80} height={80} className="w-20 h-20 mb-4" />
         </div>
 
         <div className="relative z-10 w-full max-w-sm bg-white p-8 rounded-lg shadow">
@@ -172,12 +168,14 @@ export default function RegisterPage() {
           ></div>
 
           <div className="relative z-10 text-center text-white">
-            <h1 className="text-5xl lg:text-6xl font-bold mb-4">
-              InaSumba
-            </h1>
-            <p className="text-xl lg:text-2xl font-light opacity-90">
-              Weaving The Cultures of Sumba 
-            </p>
+            <Image
+              src="/images/logo.png"
+              alt="InaSumba Logo"
+              width={480}
+              height={480}
+              className="mb-16 w-[480px] h-[480px]"
+              priority
+              />
           </div>
         </div>
 

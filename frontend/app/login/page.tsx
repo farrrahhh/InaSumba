@@ -133,14 +133,16 @@ export default function LoginPage() {
             style={{ backgroundImage: "url('/bg-login.png')" }}
           ></div>
 
-          <div className="relative z-10 text-center text-white">
-            <h1 className="text-5xl lg:text-6xl font-bold mb-4">
-              InaSumba
-            </h1>
-            <p className="text-xl lg:text-2xl font-light opacity-90">
-              Weaving The Cultures of Sumba 
-            </p>
-          </div>
+            <div className="relative z-10 flex flex-col items-center">
+              <Image
+              src="/images/logo.png"
+              alt="InaSumba Logo"
+              width={480}
+              height={480}
+              className="mb-16 w-[480px] h-[480px]"
+              priority
+              />
+            </div>
         </div>
 
         <div className="flex-1 bg-white flex items-center justify-center p-8 lg:p-12">
