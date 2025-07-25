@@ -1,15 +1,28 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from sqlalchemy.orm import Session
 from database.config import get_db
-from models.tables import Product, Transaction, User
+from models.tables import Product, Transaction, User, Weaver
 from pydantic import BaseModel
 from typing import Optional, List
 from datetime import date
 import uuid
 import random
 import string
+import logging
 
 ecommerce_router = APIRouter()
+
+class WeaverResponse(BaseModel):
+    weaver_id: str
+    name: str
+    bio: Optional[str]
+    address: Optional[str]
+    phone_number: Optional[str]
+    specialization: Optional[List[str]]
+
+    class Config:
+        from_attributes = True
+
 
 class ProductResponse(BaseModel):
     product_id: str
@@ -19,8 +32,38 @@ class ProductResponse(BaseModel):
     category: str
     description: Optional[str]
     meaning_motif: Optional[str]
+    long_description: Optional[str]
+    long_meaning_motif: Optional[str]
     video_url: Optional[str]
     photo_url: Optional[str]
+
+    class Config:
+        from_attributes = True
+
+class WeaverResponse(BaseModel):
+    weaver_id: str
+    name: str
+    bio: Optional[str]
+    address: Optional[str]
+    phone_number: Optional[str]
+    specialization: Optional[List[str]]
+
+    class Config:
+        from_attributes = True
+class ProductWithWeaverResponse(BaseModel):
+    product_id: str
+    name: str
+    quantity: int
+    price: int
+    category: str
+    description: Optional[str]
+    meaning_motif: Optional[str]
+    long_description: Optional[str]
+    long_meaning_motif: Optional[str]
+    video_url: Optional[str]
+    photo_url: Optional[str]
+    weaver_id: str
+    weaver: Optional[WeaverResponse]
 
     class Config:
         from_attributes = True
@@ -64,6 +107,7 @@ class TrackingResponse(BaseModel):
 
 def generate_random_string(length: int = 10) -> str:
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=length))
+
 @ecommerce_router.get("/products", response_model=List[ProductResponse])
 async def get_all_products(db: Session = Depends(get_db)):
     try:
@@ -75,23 +119,57 @@ async def get_all_products(db: Session = Depends(get_db)):
             detail=f"Error fetching products: {str(e)}"
         )
 
-@ecommerce_router.get("/products/{product_id}", response_model=ProductResponse)
+
+@ecommerce_router.get("/products/{product_id}", response_model=ProductWithWeaverResponse)
 async def get_product_by_id(product_id: str, db: Session = Depends(get_db)):
     try:
+        print(f"Fetching product with ID: {product_id}")
+        
         product = db.query(Product).filter(Product.product_id == product_id).first()
         if not product:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Product not found"
-            )
-        return product
+            print(f"Product not found: {product_id}")
+            raise HTTPException(status_code=404, detail="Product not found")
+        
+        print(f"Product found: {product.name}, weaver_id: {product.weaver_id}")
+        
+        weaver = db.query(Weaver).filter(Weaver.weaver_id == product.weaver_id).first()
+        print(f"Weaver found: {weaver.name if weaver else 'None'}")
+        
+        response_data = {
+            "product_id": product.product_id,
+            "name": product.name,
+            "quantity": product.quantity,
+            "price": product.price,
+            "category": product.category,
+            "description": product.description,
+            "meaning_motif": product.meaning_motif,
+            "long_description": getattr(product, 'long_description', None),
+            "long_meaning_motif": getattr(product, 'long_meaning_motif', None),
+            "video_url": product.video_url,
+            "photo_url": product.photo_url,
+            "weaver_id": product.weaver_id,
+            "weaver": {
+                "weaver_id": weaver.weaver_id,
+                "name": weaver.name,
+                "bio": weaver.bio,
+                "address": weaver.address,
+                "phone_number": weaver.phone_number,
+                "specialization": weaver.specialization
+            } if weaver else None
+        }
+        
+        
+        return response_data
+
     except HTTPException:
         raise
     except Exception as e:
+        print(f"Error in get_product_by_id: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=500,
             detail=f"Error fetching product: {str(e)}"
         )
+
 
 @ecommerce_router.post("/buy")
 async def handling_buy(buy_request: BuyRequest, db: Session = Depends(get_db)):
