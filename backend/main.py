@@ -17,7 +17,11 @@ from routes.profile import profile_router
 app = FastAPI()
 origins = [
     "http://localhost:3000",
-    "http://127.0.0.1:3000",  
+    "http://127.0.0.1:3000",
+    "https://ina-sumba.vercel.app",
+    "ina-sumba-k53i9gf7c-farahs-projects-d8079cf5.vercel.app",
+    "ina-sumba-farahs-projects-d8079cf5.vercel.app"
+
 ]
 
 app.add_middleware(
