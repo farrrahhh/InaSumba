@@ -69,45 +69,17 @@ export default function ShopMain() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <section className="bg-gradient-to-r from-green-800 to-green-200 text-white pt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-2 gap-8 items-center">
-          <div>
-            <h1 className="text-4xl md:text-5xl font-bold mb-4 font-rusland">INASUMBA</h1>
-            <p className="text-xl mb-6">
-              Sumba s ikat woven fabric, which carries traces of culture, is now available in a style that is closer, more contemporary and friendlier.
-            </p>
-            <div className="flex items-center space-x-8">
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-                  <span className="text-sm">📦</span>
-                </div>
-                <div>
-                  <div className="font-semibold">Kain Tenun</div>
-                  <div className="text-sm opacity-90">Authentic handwoven fabric</div>
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-                  <span className="text-sm">🏪</span>
-                </div>
-                <div>
-                  <div className="font-semibold">Marketplace</div>
-                  <div className="text-sm opacity-90">Traditional products online</div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="relative bottom-0">
-            <Image
-              src="/sumba.png"
-              alt="Traditional Sumba"
-              width={600}
-              height={400}
-              className="bottom-0"
-            />
-          </div>
-        </div>
-      </section>
+     <section className="relative w-full h-[320px] md:h-[400px] lg:h-[480px] overflow-hidden">
+      <Image
+        src="/images/banner.png"
+        alt="Banner"
+        fill
+        className="object-cover object-top md:object-center w-full h-full"
+        priority
+      />
+    </section>
+
+
 
       {/* Product List */}
       <section className="py-16 px-4 sm:px-6 lg:px-8">
