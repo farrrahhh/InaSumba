@@ -196,7 +196,7 @@ export default function ChatPage() {
 
         <div className="hidden md:block absolute inset-0">
           <Image
-            src="/images/dekstop.png"
+            src="/images/bg-dekstop-chatbot-ina.png"
             alt="Traditional Javanese Palace Background - Desktop"
             fill
             className="w-full h-full object-cover"
@@ -239,55 +239,76 @@ export default function ChatPage() {
           </Button>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-4  relative z-30">
-          {messages.map((message) => (
-            <div key={message.id} className={`relative z-30 flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}>
-              <div className="flex items-start space-x-2 max-w-[80%] md:max-w-[60%]">
-                {message.sender === "bot" && (
-                  <Image
-                    src="/images/INA.png"
-                    alt="Ina Na"
-                    width={32}
-                    height={32}
-                    className="w-8 h-8 rounded-full flex-shrink-0 mt-1"
-                  />
-                )}
+        <div className="flex-1 relative z-30 flex flex-col md:flex-row">
+          <div className="hidden md:flex md:w-60 md:items-end md:pl-6 relative">
+            <Image
+              src="/images/nametag.png"
+              alt="Nametag"
+              width={120}
+              height={120}
+              className="absolute left-25 top-3/5 -translate-y-1/2 -translate-x-1/2 z-50"
+            />
 
-                <div className="flex flex-col">
-                  <div
-                    className={`p-3 rounded-2xl ${
-                      message.sender === "user"
-                        ? "bg-green-600 text-white rounded-br-md"
-                        : message.isTyping
+            <Image
+              src="/images/INA-NA.gif"
+              alt="Ina Na"
+              width={240}
+              height={360}
+              className="w-60 h-auto"
+              priority={false}
+            />
+          </div>
+
+
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={`relative z-30 flex ${
+                  message.sender === "user" ? "justify-end" : "justify-start"
+                }`}
+              >
+                <div className="flex items-start space-x-2 max-w-[80%] md:max-w-[60%]">
+                  {message.sender === "bot" && (
+                    <Image
+                      src="/images/INA.png"
+                      alt="Ina Na"
+                      width={32}
+                      height={32}
+                      className="w-8 h-8 rounded-full flex-shrink-0 mt-1"
+                    />
+                  )}
+
+                  <div className="flex flex-col">
+                    <div
+                      className={`p-3 rounded-2xl ${
+                        message.sender === "user"
+                          ? "bg-white text-black rounded-br-md"
+                          : message.isTyping
                           ? "bg-gray-600/80 text-white animate-pulse"
-                          : "bg-black/60 text-white rounded-bl-md backdrop-blur-sm"
-                    }`}
-                  >
-                    <p className="text-sm md:text-base leading-relaxed">{message.message}</p>
-                  </div>
+                          : "bg-[#FEF0A0] text-black rounded-bl-md backdrop-blur-sm"
+                      }`}
+                    >
+                      <p className="text-sm md:text-base leading-relaxed">
+                        {message.message}
+                      </p>
+                    </div>
 
-                  <span
-                    className={`text-xs text-white/60 mt-1 ${message.sender === "user" ? "text-right" : "text-left"}`}
-                  >
-                    {formatTime(message.timestamp)}
-                  </span>
+                    <span
+                      className={`text-xs text-white/60 mt-1 ${
+                        message.sender === "user" ? "text-right" : "text-left"
+                      }`}
+                    >
+                      {formatTime(message.timestamp)}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-          <div ref={messagesEndRef} />
+            ))}
+            <div ref={messagesEndRef} />
+          </div>
         </div>
 
-        <div className="hidden md:block absolute bottom-20 right-8 pointer-events-none z-10">
-          <Image
-            src="/images/INA-NA.gif"
-            alt="Ina Na"
-            width={192}
-            height={288}
-            className="w-48 h-auto"
-            priority={false}
-          />
-        </div>
 
         <div className="p-4 bg-black/20 backdrop-blur-sm">
           <div className="flex items-center space-x-2 bg-white/90 rounded-full px-4 py-2">
