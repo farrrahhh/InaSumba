@@ -31,6 +31,7 @@ export default function ChatPage() {
   const [userId, setUserId] = useState<string>("")
   const [isTTSEnabled, setIsTTSEnabled] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messagesContainerRef = useRef<HTMLDivElement>(null)
   const audioRef = useRef<HTMLAudioElement>(null)
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
@@ -48,6 +49,7 @@ export default function ChatPage() {
     }
     setMessages([initialMessage])
   }, [])
+  
   useEffect(() => {
     const isLoggedIn = localStorage.getItem("isLoggedIn")
 
@@ -57,12 +59,26 @@ export default function ChatPage() {
     }
   }, [])
 
+  // Improved scroll to bottom function
   useEffect(() => {
     scrollToBottom()
   }, [messages])
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    // Use setTimeout to ensure DOM has updated
+    setTimeout(() => {
+      if (messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({ 
+          behavior: "smooth",
+          block: "end"
+        })
+      }
+      
+      // Alternative method if scrollIntoView doesn't work well
+      if (messagesContainerRef.current) {
+        messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight
+      }
+    }, 100)
   }
 
   const sendMessage = async () => {
@@ -208,23 +224,23 @@ export default function ChatPage() {
       <div className="absolute inset-0 bg-black/30" />
 
       <div className="relative z-30 flex flex-col h-screen">
-        <header className="flex items-center justify-between p-4 bg-black/20 backdrop-blur-sm">
+        <header className="flex items-center justify-between p-4 bg-black/20 backdrop-blur-sm flex-shrink-0">
           <div className="flex items-center space-x-3">
             <Button variant="ghost" size="icon" className="text-white hover:bg-white/20" onClick={() => router.back()}>
               <ArrowLeft className="h-6 w-6" />
             </Button>
             <div className="flex items-center space-x-3">
               <Image
-                src="/images/INA.png"
-                alt="INA NA"
-                width={35}
-                height={35}
-                className="w-10 h-10 rounded-full object-cover"
-                priority
+              src="/images/pp.png"
+              alt="INA NA"
+              width={35}
+              height={35}
+              className="w-10 h-10 rounded-full object-cover aspect-square"
+              priority
               />
               <div>
-                <h1 className="text-white font-semibold text-lg">Ina Na</h1>
-                <p className="text-white/70 text-sm">Online</p>
+              <h1 className="text-white font-semibold text-lg">Ina Na</h1>
+              <p className="text-white/70 text-sm">Online</p>
               </div>
             </div>
           </div>
@@ -239,8 +255,8 @@ export default function ChatPage() {
           </Button>
         </header>
 
-        <div className="flex-1 relative z-30 flex flex-col md:flex-row">
-          <div className="hidden md:flex md:w-60 md:items-end md:pl-6 relative">
+        <div className="flex-1 relative z-30 flex flex-col md:flex-row min-h-0">
+          <div className="hidden md:flex md:w-60 md:items-end md:pl-6 relative flex-shrink-0">
             <Image
               src="/images/nametag.png"
               alt="Nametag"
@@ -259,8 +275,15 @@ export default function ChatPage() {
             />
           </div>
 
-
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {/* Chat messages container with proper scrolling */}
+          <div 
+            ref={messagesContainerRef}
+            className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent"
+            style={{ 
+              scrollBehavior: 'smooth',
+              maxHeight: 'calc(100vh - 160px)' // Adjust based on header and input heights
+            }}
+          >
             {messages.map((message) => (
               <div
                 key={message.id}
@@ -269,15 +292,17 @@ export default function ChatPage() {
                 }`}
               >
                 <div className="flex items-start space-x-2 max-w-[80%] md:max-w-[60%]">
-                  {message.sender === "bot" && (
-                    <Image
-                      src="/images/INA.png"
+                    {message.sender === "bot" && (
+                    <div className="w-8 h-8 flex-shrink-0 mt-1 rounded-full overflow-hidden bg-white">
+                      <Image
+                      src="/images/pp.png"
                       alt="Ina Na"
                       width={32}
                       height={32}
-                      className="w-8 h-8 rounded-full flex-shrink-0 mt-1"
-                    />
-                  )}
+                      className="w-full h-full object-cover"
+                      />
+                    </div>
+                    )}
 
                   <div className="flex flex-col">
                     <div
@@ -289,7 +314,7 @@ export default function ChatPage() {
                           : "bg-[#FEF0A0] text-black rounded-bl-md backdrop-blur-sm"
                       }`}
                     >
-                      <p className="text-sm md:text-base leading-relaxed">
+                      <p className="text-sm md:text-base leading-relaxed break-words">
                         {message.message}
                       </p>
                     </div>
@@ -305,12 +330,13 @@ export default function ChatPage() {
                 </div>
               </div>
             ))}
-            <div ref={messagesEndRef} />
+            {/* Scroll anchor */}
+            <div ref={messagesEndRef} className="h-1" />
           </div>
         </div>
 
-
-        <div className="p-4 bg-black/20 backdrop-blur-sm">
+        {/* Input container */}
+        <div className="p-4 bg-black/20 backdrop-blur-sm flex-shrink-0">
           <div className="flex items-center space-x-2 bg-white/90 rounded-full px-4 py-2">
             <Input
               value={inputMessage}

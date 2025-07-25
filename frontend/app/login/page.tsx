@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/lib/auth'
 import { Eye, EyeOff } from "lucide-react"
+import Image from 'next/image'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -68,14 +69,8 @@ export default function LoginPage() {
           style={{ backgroundImage: "url('/bg-login.png')" }}
         ></div>
 
-        <div className="relative z-10 text-center text-white mb-8">
-          <h1 className="text-4xl font-bold mb-2">
-            InaSumba
-          </h1>
-          <p className="text-lg font-light opacity-90">
-            Weaving The Cultures of Sumba 
-          </p>
-        </div>
+        <Image src="/images/logo.png" alt="InaSumba Logo" width={80} height={80} className="w-20 h-20 mb-4" />
+        
 
         <div className="relative z-10 w-full max-w-sm bg-white p-8 rounded-lg shadow">
           <h2 className="text-2xl text-center text-zinc-700 font-semibold mb-6">LOGIN</h2>
