@@ -9,23 +9,43 @@ import { Star, ShoppingCart, Heart } from "lucide-react"
 import { api, type Product } from "@/lib/api"
 import BottomNavbar from "@/components/bottom-navbar"
 
+// Helper function to convert Google Drive URLs to direct image URLs
+const convertGoogleDriveUrl = (url: string | null): string => {
+  if (!url) return "/placeholder.svg"
+  
+  // Check if it's a Google Drive URL
+  const match = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/)
+  if (match) {
+    const fileId = match[1]
+    return `https://drive.google.com/uc?export=view&id=${fileId}`
+  }
+  
+  return url
+}
+
 export default function ShopMain() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const loadProducts = async () => {
       try {
+        setLoading(true)
+        setError(null)
         const data = await api.getProducts()
+        console.log("Fetched products:", data) // Debug log
         setProducts(data.slice(0, 6))
       } catch (error) {
         console.error("Error loading products:", error)
+        setError("Failed to load products. Please try again.")
       } finally {
         setLoading(false)
       }
     }
     loadProducts()
   }, [])
+
   useEffect(() => {
     const isLoggedIn = localStorage.getItem("isLoggedIn")
 
@@ -35,47 +55,31 @@ export default function ShopMain() {
     }
   }, [])
 
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Error Loading Products</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <Button onClick={() => window.location.reload()}>Retry</Button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <section className="bg-gradient-to-r from-green-800 to-green-200 text-white pt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-2 gap-8 items-center">
-          <div>
-            <h1 className="text-4xl md:text-5xl font-bold mb-4 font-rusland">INASUMBA</h1>
-            <p className="text-xl mb-6">
-              Sumba s ikat woven fabric, which carries traces of culture, is now available in a style that is closer, more contemporary and friendlier.
-            </p>
-            <div className="flex items-center space-x-8">
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-                  <span className="text-sm">📦</span>
-                </div>
-                <div>
-                  <div className="font-semibold">Kain Tenun</div>
-                  <div className="text-sm opacity-90">Authentic handwoven fabric</div>
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-                  <span className="text-sm">🏪</span>
-                </div>
-                <div>
-                  <div className="font-semibold">Marketplace</div>
-                  <div className="text-sm opacity-90">Traditional products online</div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="relative bottom-0">
-            <Image
-              src="/sumba.png"
-              alt="Traditional Sumba"
-              width={600}
-              height={400}
-              className="bottom-0"
-            />
-          </div>
-        </div>
-      </section>
+     <section className="relative w-full h-[320px] md:h-[400px] lg:h-[480px] overflow-hidden">
+      <Image
+        src="/images/banner.png"
+        alt="Banner"
+        fill
+        className="object-cover object-top md:object-center w-full h-full"
+        priority
+      />
+    </section>
+
+
 
       {/* Product List */}
       <section className="py-16 px-4 sm:px-6 lg:px-8">
@@ -101,40 +105,58 @@ export default function ShopMain() {
                     </CardContent>
                   </Card>
                 ))
+              : products.length === 0 ? (
+                  <div className="col-span-full text-center py-12">
+                    <p className="text-gray-500 text-lg">No products available</p>
+                  </div>
+                )
               : products.map((product) => (
                   <Card key={product.product_id} className="group hover:shadow-lg transition-shadow">
                     <CardContent className="p-0">
                       <div className="relative">
                         <Image
-                          src={product.photo_url || "/placeholder.svg"}
+                          src={convertGoogleDriveUrl(product.photo_url ?? null)}
                           alt={product.name}
                           width={300}
                           height={300}
                           className="w-full h-64 object-cover rounded-t-lg"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement
+                            target.src = "/placeholder.svg"
+                          }}
                         />
-                        <Button
-                          size="icon"
-                          variant="secondary"
-                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <Heart className="h-4 w-4" />
-                        </Button>
+                        
+                        {/* Stock indicator */}
+                        <div className="absolute top-2 left-2 bg-green-600 text-white px-2 py-1 rounded text-xs">
+                          Stock: {product.quantity}
+                        </div>
                       </div>
 
                       <div className="p-4">
                         <Link href={`/product/${product.product_id}`}>
-                          <h3 className="font-semibold text-gray-900 mb-2 hover:text-orange-600 transition-colors">
+                          <h3 className="font-semibold text-gray-900 mb-2 hover:text-orange-600 transition-colors line-clamp-2">
                             {product.name}
                           </h3>
                         </Link>
+
+                        
+
+                        {/* Description preview */}
+                        {product.description && (
+                          <p className="text-sm text-gray-600 mb-3 line-clamp-2">{product.description}</p>
+                        )}
 
                         <div className="flex items-center justify-between">
                           <span className="text-lg font-bold text-gray-900">
                             Rp {product.price.toLocaleString("id-ID")}
                           </span>
-                          <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                          <Button 
+                            size="sm" 
+                            className="bg-green-600 hover:bg-green-700"
+                            disabled={product.quantity === 0}
+                          >
                             <ShoppingCart className="h-4 w-4 mr-1" />
-                            Add
+                            {product.quantity === 0 ? "Out of Stock" : "Add"}
                           </Button>
                         </div>
                       </div>
@@ -153,49 +175,52 @@ export default function ShopMain() {
           <div className="grid md:grid-cols-3 gap-8">
             {[
               {
-                name: "Bagus",
-                avatar: "/placeholder.svg?height=50&width=50&text=B",
-                rating: 5,
-                review:
-                  "Kain tenun yang sangat bagus! Kualitas premium, motif cantik, warna cerah. Sangat puas dengan pembelian ini.",
+              name: "Melati",
+              avatar: "/images/melati.jpeg",
+              rating: 5,
+              review:
+                "Very beautiful woven fabric! Premium quality, lovely patterns, and bright colors. Very satisfied with this purchase.",
               },
               {
-                name: "Sarina",
-                avatar: "/placeholder.svg?height=50&width=50&text=S",
-                rating: 5,
-                review: "Pengiriman cepat, packaging rapi. Kain tenunnya sangat indah dan berkualitas tinggi!",
+              name: "Angel",
+              avatar: "/images/angel.jpeg",
+              rating: 5,
+              review: "Fast delivery, neat packaging. The woven fabric is very beautiful and of high quality!",
               },
               {
-                name: "Heru",
-                avatar: "/placeholder.svg?height=50&width=50&text=H",
-                rating: 5,
-                review: "Pelayanan sangat baik dan produk sesuai ekspektasi. Akan beli lagi di sini!",
+              name: "Rizqi",
+              avatar: "/images/rizki.png",
+              rating: 5,
+              review: "Excellent service and the product met my expectations. Will buy again here!",
               },
             ].map((review, index) => (
               <Card key={index}>
                 <CardContent className="p-6">
-                  <div className="flex items-center mb-4">
-                    <Image
+                    <div className="flex items-center mb-4">
+                    <div className="w-12 h-12 mr-3 relative">
+                      <Image
                       src={review.avatar}
                       alt={review.name}
-                      width={50}
-                      height={50}
-                      className="rounded-full mr-3"
-                    />
+                      fill
+                      className="rounded-full object-cover"
+                      style={{ objectFit: "cover" }}
+                      />
+                    </div>
                     <div>
                       <div className="font-semibold text-black">{review.name}</div>
                       <div className="flex items-center">
-                        {[...Array(review.rating)].map((_, i) => (
-                          <Star key={i} className="h-4 w-4 text-yellow-400 fill-current" />
-                        ))}
+                      {[...Array(review.rating)].map((_, i) => (
+                        <Star key={i} className="h-4 w-4 text-yellow-400 fill-current" />
+                      ))}
                       </div>
                     </div>
-                  </div>
+                    </div>
                   <p className="text-gray-600">{review.review}</p>
                 </CardContent>
               </Card>
             ))}
           </div>
+          <div className="mt-12" />
         </div>
       </section>     
       <BottomNavbar /> 
