@@ -17,8 +17,8 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(true)
   const { toast } = useToast()
   const router = useRouter()
-
-  const userId = localStorage.getItem("user_id")
+  const [userId, setUserId] = useState<string | null>(null)
+  
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -48,14 +48,24 @@ export default function ProfilePage() {
 
     loadProfile()
   }, [toast, userId])
+
   useEffect(() => {
     const isLoggedIn = localStorage.getItem("isLoggedIn")
+    const storedUserId = localStorage.getItem("user_id")
 
-    if (isLoggedIn !== "true") {
-      window.location.href = "/login"
+    if (isLoggedIn !== "true" || !storedUserId) {
+      toast({
+        title: "Unauthorized",
+        description: "Please log in first.",
+        variant: "destructive",
+      })
+      router.push("/login")
       return
     }
-  }, [])
+
+    setUserId(storedUserId)
+  }, [router, toast])
+
 
   const handleProfileUpdate = (updatedProfile: ProfileResponse) => {
     setProfile(updatedProfile)
