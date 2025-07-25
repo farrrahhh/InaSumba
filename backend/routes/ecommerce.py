@@ -23,7 +23,6 @@ class WeaverResponse(BaseModel):
     class Config:
         from_attributes = True
 
-
 class ProductResponse(BaseModel):
     product_id: str
     name: str
@@ -40,16 +39,6 @@ class ProductResponse(BaseModel):
     class Config:
         from_attributes = True
 
-class WeaverResponse(BaseModel):
-    weaver_id: str
-    name: str
-    bio: Optional[str]
-    address: Optional[str]
-    phone_number: Optional[str]
-    specialization: Optional[List[str]]
-
-    class Config:
-        from_attributes = True
 class ProductWithWeaverResponse(BaseModel):
     product_id: str
     name: str
@@ -79,6 +68,7 @@ class TransactionResponse(BaseModel):
     user_id: str
     product_id: str
     product_name: str
+    quantity: int
     address: str
     phone_number: str
     resi: Optional[str]
@@ -119,7 +109,6 @@ async def get_all_products(db: Session = Depends(get_db)):
             detail=f"Error fetching products: {str(e)}"
         )
 
-
 @ecommerce_router.get("/products/{product_id}", response_model=ProductWithWeaverResponse)
 async def get_product_by_id(product_id: str, db: Session = Depends(get_db)):
     try:
@@ -158,7 +147,6 @@ async def get_product_by_id(product_id: str, db: Session = Depends(get_db)):
             } if weaver else None
         }
         
-        
         return response_data
 
     except HTTPException:
@@ -170,57 +158,55 @@ async def get_product_by_id(product_id: str, db: Session = Depends(get_db)):
             detail=f"Error fetching product: {str(e)}"
         )
 
-
-@ecommerce_router.post("/buy")
-async def handling_buy(buy_request: BuyRequest, db: Session = Depends(get_db)):
+@ecommerce_router.post("/buy", response_model=TransactionResponse)
+async def buy_product(request: BuyRequest, db: Session = Depends(get_db)):
     try:
-        user = db.query(User).filter(User.user_id == buy_request.user_id).first()
+        # Get user and product
+        user = db.query(User).filter(User.user_id == request.user_id).first()
+        product = db.query(Product).filter(Product.product_id == request.product_id).first()
+        
         if not user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
-            )
-        
-        product = db.query(Product).filter(Product.product_id == buy_request.product_id).first()
+            raise HTTPException(status_code=404, detail="User not found")
         if not product:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Product not found"
-            )
-        
-        if product.quantity <= 0:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Product out of stock"
-            )
-        
+            raise HTTPException(status_code=404, detail="Product not found")
+        if product.quantity < 1:
+            raise HTTPException(status_code=400, detail="Product out of stock")
+
+        # Calculate total price
         shipping_cost = 10000
         total_price = product.price + shipping_cost
-        
-        transaction_id = f"TXN-{generate_random_string(8)}"
-        
-        new_transaction = Transaction(
+
+        # Create transaction (DON'T reduce stock yet - only after payment confirmation)
+        transaction_id = str(uuid.uuid4())
+        transaction = Transaction(
             transaction_id=transaction_id,
-            user_id=buy_request.user_id,
-            product_id=buy_request.product_id,
-            address=buy_request.address,
-            phone_number=buy_request.phone_number,
+            user_id=request.user_id,
+            product_id=request.product_id,
+            quantity=1,  # Fixed: was missing quantity field
+            address=request.address,
+            phone_number=request.phone_number,
+            resi=None,
             total_price=total_price,
             status="pending_payment",
             transaction_date=date.today()
         )
-        
-        db.add(new_transaction)
+        db.add(transaction)
         db.commit()
-        db.refresh(new_transaction)
-        
-        return {
-            "message": "Transaction created successfully",
-            "transaction_id": transaction_id,
-            "total_price": total_price,
-            "redirect_to_payment": True
-        }
-        
+        db.refresh(transaction)
+
+        return TransactionResponse(
+            transaction_id=transaction.transaction_id,
+            user_id=transaction.user_id,
+            product_id=transaction.product_id,
+            product_name=product.name,
+            quantity=transaction.quantity,
+            address=transaction.address,
+            phone_number=transaction.phone_number,
+            resi=transaction.resi,
+            total_price=transaction.total_price,
+            status=transaction.status,
+            transaction_date=transaction.transaction_date
+        )
     except HTTPException:
         raise
     except Exception as e:
@@ -315,12 +301,26 @@ async def confirm_payment(transaction_id: str, db: Session = Depends(get_db)):
                 detail="Transaction not found"
             )
         
+        if transaction.status != "pending_payment":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Transaction is not in pending payment status"
+            )
+        
+        # Check if product is still available
+        product = db.query(Product).filter(Product.product_id == transaction.product_id).first()
+        if not product or product.quantity < 1:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Product is no longer available"
+            )
+        
+        # Update transaction status and generate resi
         transaction.status = "paid"
         transaction.resi = f"RESI-{generate_random_string(10)}"
         
-        product = db.query(Product).filter(Product.product_id == transaction.product_id).first()
-        if product:
-            product.quantity -= 1
+        # NOW reduce the product quantity after payment confirmation
+        product.quantity -= 1
         
         db.commit()
         
@@ -354,6 +354,7 @@ async def get_all_transactions_by_user_id(user_id: str, db: Session = Depends(ge
                 user_id=transaction.user_id,
                 product_id=transaction.product_id,
                 product_name=transaction.product.name,
+                quantity=transaction.quantity,
                 address=transaction.address,
                 phone_number=transaction.phone_number,
                 resi=transaction.resi,

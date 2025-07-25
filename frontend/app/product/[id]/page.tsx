@@ -7,27 +7,24 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Star, Heart, Share2, ArrowLeft, Plus, Minus, Play, ChevronLeft, ChevronRight } from "lucide-react"
+import { Heart, ArrowLeft, Plus, Minus, Play, ChevronLeft, ChevronRight } from "lucide-react"
 import { PurchaseModal } from "@/components/purchase-modal"
-import { api, Weaver, type Product as OriginalProduct } from "@/lib/api"
-
-// Extend Product type to include optional weaver property
-type Product = OriginalProduct & {
-  weaver?: {
-    name?: string
-    bio?: string
-    specialization?: string[]
-  }
-}
+import { api, type ProductWithWeaver } from "@/lib/api"
 
 // Helper function to convert Google Drive share URL to direct view URL
-const convertGoogleDriveUrl = (url: string) => {
+const convertGoogleDriveUrl = (url: string): string | null => {
   if (!url) return null
   const match = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/)
   if (match) {
     return `https://drive.google.com/uc?export=view&id=${match[1]}`
   }
   return url
+}
+
+type MediaItem = {
+  type: 'image' | 'video'
+  url: string | null
+  alt: string
 }
 
 export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -37,28 +34,37 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   const [selectedMediaIndex, setSelectedMediaIndex] = useState(0)
   const [quantity, setQuantity] = useState(1)
   const [showPurchaseModal, setShowPurchaseModal] = useState(false)
-  const [product, setProduct] = useState<Product | null>(null)
+  const [product, setProduct] = useState<ProductWithWeaver | null>(null)
   const [loading, setLoading] = useState(true)
-  
+  const [error, setError] = useState<string>("")
 
   useEffect(() => {
     const loadProduct = async () => {
       try {
+        setLoading(true)
+        setError("")
         const data = await api.getProduct(id)
-
+        
+        if (!data) {
+          setError("Product not found")
+          return
+        }
+        
         setProduct(data)
       } catch (error) {
         console.error("Error loading product:", error)
+        setError(error instanceof Error ? error.message : "Failed to load product")
       } finally {
         setLoading(false)
       }
     }
-    loadProduct()
+    
+    if (id) {
+      loadProduct()
+    }
   }, [id])
 
-  
-  
-
+  // Loading state
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -70,14 +76,23 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
     )
   }
 
-  if (!product) {
+  // Error or not found state
+  if (error || !product) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Product Not Found</h2>
-          <p className="text-gray-600 mb-6">The product you re looking for doesn t exist.</p>
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">
+            {error || "Product Not Found"}
+          </h2>
+          <p className="text-gray-600 mb-6">
+            {error === "Product not found" 
+              ? "The product you're looking for doesn't exist." 
+              : "There was an error loading the product."}
+          </p>
           <Link href="/products">
-            <Button className="bg-green-600 hover:bg-green-700 text-white">Back to Products</Button>
+            <Button className="bg-green-600 hover:bg-green-700 text-white">
+              Back to Products
+            </Button>
           </Link>
         </div>
       </div>
@@ -85,11 +100,6 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   }
 
   // Create media array with photo and video (if available)
-  type MediaItem = {
-    type: 'image' | 'video',
-    url: string | null,
-    alt: string
-  }
   const mediaItems: MediaItem[] = []
   
   if (product.photo_url) {
@@ -125,12 +135,28 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
     setSelectedMediaIndex((prev) => (prev - 1 + mediaItems.length) % mediaItems.length)
   }
 
+  const handleQuantityDecrease = () => {
+    setQuantity(prev => Math.max(1, prev - 1))
+  }
+
+  const handleQuantityIncrease = () => {
+    if (product) {
+      setQuantity(prev => Math.min(product.quantity, prev + 1))
+    }
+  }
+
+  const handleBuyNow = () => {
+    if (product && product.quantity > 0) {
+      setShowPurchaseModal(true)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-green-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16">
+          <div className="flex items-center justify-between h-16">
             <button
               type="button"
               onClick={() => window.history.back()}
@@ -139,7 +165,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               <ArrowLeft className="h-5 w-5" />
               <span className="text-2xl font-bold text-green-600">INASUMBA</span>
             </button>
-            </div>
+          </div>
         </div>
       </header>
 
@@ -154,16 +180,33 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                   alt={mediaItems[selectedMediaIndex].alt}
                   fill
                   className="object-cover"
+                  priority
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement
+                    target.src = "/placeholder.svg?height=500&width=500&text=Product+Image"
+                  }}
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-gray-900">
-                  <iframe
-                    src={`https://drive.google.com/file/d/${product.video_url?.match(/\/file\/d\/([a-zA-Z0-9_-]+)/)?.[1]}/preview`}
-                    width="100%"
-                    height="100%"
-                    allow="autoplay"
-                    className="border-none"
-                  />
+                  {product.video_url?.includes('drive.google.com') ? (
+                    <iframe
+                      src={`https://drive.google.com/file/d/${product.video_url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/)?.[1]}/preview`}
+                      width="100%"
+                      height="100%"
+                      allow="autoplay"
+                      className="border-none"
+                      title={`${product.name} - Weaving Process Video`}
+                    />
+                  ) : (
+                    <video
+                      src={product.video_url || ''}
+                      controls
+                      className="w-full h-full object-cover"
+                      poster={mediaItems.find(item => item.type === 'image')?.url || ''}
+                    >
+                      Your browser does not support the video tag.
+                    </video>
+                  )}
                 </div>
               )}
               
@@ -182,6 +225,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                     size="icon"
                     className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white"
                     onClick={prevMedia}
+                    aria-label="Previous media"
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
@@ -190,6 +234,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                     size="icon"
                     className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white"
                     onClick={nextMedia}
+                    aria-label="Next media"
                   >
                     <ChevronRight className="h-4 w-4" />
                   </Button>
@@ -209,16 +254,17 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
 
             {/* Media thumbnails */}
             {mediaItems.length > 1 && (
-              <div className="flex space-x-2">
+              <div className="flex space-x-2 overflow-x-auto">
                 {mediaItems.map((media, index) => (
                   <button
                     key={index}
                     onClick={() => setSelectedMediaIndex(index)}
-                    className={`relative w-20 h-20 rounded-lg overflow-hidden border-2 transition-colors ${
+                    className={`relative w-20 h-20 rounded-lg overflow-hidden border-2 transition-colors flex-shrink-0 ${
                       selectedMediaIndex === index
                         ? 'border-green-600'
                         : 'border-gray-200 hover:border-gray-300'
                     }`}
+                    aria-label={`View ${media.type} ${index + 1}`}
                   >
                     {media.type === 'image' ? (
                       <Image
@@ -243,31 +289,38 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             <div className="bg-white p-6 rounded-lg border border-green-100 shadow-sm">
               <h1 className="text-3xl font-bold text-gray-800 mb-4">{product.name}</h1>
 
-              
-
               <div className="flex items-center space-x-4 mb-6">
-                <span className="text-3xl font-bold text-green-700">Rp {product.price.toLocaleString("id-ID")}</span>
+                <span className="text-3xl font-bold text-green-700">
+                  Rp {product.price.toLocaleString("id-ID")}
+                </span>
               </div>
 
               <div className="mb-6">
-                <Badge variant="secondary" className="mr-2 bg-green-50 text-green-700 border-green-200">
-                  Stock: {product.quantity}
-                </Badge>
-                <Badge variant="outline" className="text-gray-600 border-gray-300">{product.category}</Badge>
-                <h4 className="font-semibold mb-2 text-amber-800">Description of Product</h4>
-                <p className="text-sm text-gray-600 mt-2">{product.description}</p>
+                <div className="flex flex-wrap gap-2 mb-4">
+                  <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200">
+                    Stock: {product.quantity}
+                  </Badge>
+                  <Badge variant="outline" className="text-gray-600 border-gray-300">
+                    {product.category}
+                  </Badge>
+                </div>
+                
+                {product.description && (
+                  <div>
+                    <h4 className="font-semibold mb-2 text-amber-800">Description</h4>
+                    <p className="text-sm text-gray-600">{product.description}</p>
+                  </div>
+                )}
               </div>
 
               {/* Motif Meaning */}
               {product.meaning_motif && (
                 <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
                   <h4 className="font-semibold mb-2 text-amber-800">Cultural Meaning</h4>
-                  <p className="text-sm text-amber-700">{product.meaning_motif }</p>
+                  <p className="text-sm text-amber-700">{product.meaning_motif}</p>
                 </div>
               )}
             </div>
-
-            
 
             {/* Quantity & Actions */}
             <div className="bg-white p-6 rounded-lg border border-green-100 shadow-sm space-y-4">
@@ -277,17 +330,23 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                   <Button 
                     variant="ghost" 
                     size="icon" 
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="text-gray-600 hover:text-green-600 hover:bg-green-50"
+                    onClick={handleQuantityDecrease}
+                    disabled={quantity <= 1}
+                    className="text-gray-600 hover:text-green-600 hover:bg-green-50 disabled:opacity-50"
+                    aria-label="Decrease quantity"
                   >
                     <Minus className="h-4 w-4" />
                   </Button>
-                  <span className="px-4 py-2 font-medium text-gray-700 min-w-[3rem] text-center">{quantity}</span>
+                  <span className="px-4 py-2 font-medium text-gray-700 min-w-[3rem] text-center">
+                    {quantity}
+                  </span>
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => setQuantity(Math.min(product.quantity, quantity + 1))}
-                    className="text-gray-600 hover:text-green-600 hover:bg-green-50"
+                    onClick={handleQuantityIncrease}
+                    disabled={quantity >= product.quantity}
+                    className="text-gray-600 hover:text-green-600 hover:bg-green-50 disabled:opacity-50"
+                    aria-label="Increase quantity"
                   >
                     <Plus className="h-4 w-4" />
                   </Button>
@@ -297,8 +356,8 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               <div className="flex space-x-4">
                 <Button
                   size="lg"
-                  className="flex-1 bg-green-600 hover:bg-green-700 text-white shadow-sm transition-colors"
-                  onClick={() => setShowPurchaseModal(true)}
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white shadow-sm transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  onClick={handleBuyNow}
                   disabled={product.quantity === 0}
                 >
                   {product.quantity === 0 ? "Out of Stock" : "Buy Now"}
@@ -307,6 +366,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                   size="lg"
                   variant="outline"
                   className="border-green-600 text-green-600 hover:bg-green-50"
+                  aria-label="Add to wishlist"
                 >
                   <Heart className="h-4 w-4 mr-2" />
                   Save
@@ -344,9 +404,9 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               <Card className="border-green-100">
                 <CardContent className="p-6">
                   <div className="prose max-w-none">
-                    <h3 className="text-xl font-semibold text-gray-800 mb-4">Description</h3>
+                    <h3 className="text-xl font-semibold text-gray-800 mb-4">Product Description</h3>
                     <p className="text-gray-700 leading-relaxed">
-                      {product.long_description || "No description available for this product."}
+                      {product.long_description || product.description || "No detailed description available for this product."}
                     </p>
                   </div>
                 </CardContent>
@@ -359,7 +419,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                   <div className="prose max-w-none">
                     <h3 className="text-xl font-semibold text-gray-800 mb-4">Cultural Significance</h3>
                     <p className="text-gray-700 leading-relaxed">
-                      {product.long_meaning_motif || "No cultural meaning information available for this product."}
+                      {product.long_meaning_motif || product.meaning_motif || "No cultural meaning information available for this product."}
                     </p>
                   </div>
                 </CardContent>
@@ -375,19 +435,17 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                         <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
                           <span className="text-green-600 font-bold text-2xl">
                             {product.weaver?.name
-                              ? product.weaver.name.split(" ").map(n => n[0]).join("")
+                              ? product.weaver.name.split(" ").map(n => n[0]).join("").toUpperCase()
                               : "W"}
                           </span>
                         </div>
                         <div>
                           <h3 className="text-xl font-semibold text-gray-800">
-                            {product.weaver?.name || "Weaver"}
+                            {product.weaver?.name || "Traditional Weaver"}
                           </h3>
-                          <p className="text-green-600 font-medium">
-                            {"Weaver"}
-                          </p>
+                          <p className="text-green-600 font-medium">Master Artisan</p>
                           <p className="text-sm text-gray-600">
-                            { "Sumba, Indonesia"}
+                            {product.weaver?.address || "Sumba, Indonesia"}
                           </p>
                         </div>
                       </div>
@@ -396,7 +454,8 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                         <div>
                           <h4 className="font-semibold mb-2 text-gray-800">About the Artisan</h4>
                           <p className="text-gray-700 text-sm leading-relaxed">
-                            {product.weaver?.bio 
+                            {product.weaver?.bio || 
+                              "A skilled traditional weaver from Sumba, dedicated to preserving the ancient art of ikat weaving. With years of experience passed down through generations, this artisan creates beautiful textiles that tell stories of Sumba's rich cultural heritage."
                             }
                           </p>
                         </div>
@@ -429,7 +488,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                           <div className="w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-xs font-semibold">1</div>
                           <div>
                             <p className="font-medium text-gray-800">Thread Preparation</p>
-                            <p className="text-sm text-gray-600">Hand-spun cotton threads are carefully prepared</p>
+                            <p className="text-sm text-gray-600">Hand-spun cotton threads are carefully prepared and sorted</p>
                           </div>
                         </div>
                         
@@ -437,7 +496,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                           <div className="w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-xs font-semibold">2</div>
                           <div>
                             <p className="font-medium text-gray-800">Natural Dyeing</p>
-                            <p className="text-sm text-gray-600">Traditional plant-based dyes create vibrant colors</p>
+                            <p className="text-sm text-gray-600">Traditional plant-based dyes create vibrant, lasting colors</p>
                           </div>
                         </div>
                         
@@ -445,7 +504,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                           <div className="w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-xs font-semibold">3</div>
                           <div>
                             <p className="font-medium text-gray-800">Pattern Binding</p>
-                            <p className="text-sm text-gray-600">Intricate patterns are bound before dyeing</p>
+                            <p className="text-sm text-gray-600">Intricate patterns are bound before the dyeing process</p>
                           </div>
                         </div>
                         
@@ -453,12 +512,10 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                           <div className="w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-xs font-semibold">4</div>
                           <div>
                             <p className="font-medium text-gray-800">Hand Weaving</p>
-                            <p className="text-sm text-gray-600">Final weaving process takes weeks to complete</p>
+                            <p className="text-sm text-gray-600">Final weaving process takes weeks to months to complete</p>
                           </div>
                         </div>
                       </div>
-                      
-                     
                     </div>
                   </div>
                 </CardContent>
@@ -468,16 +525,20 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
         </div>
       </div>
 
-      <PurchaseModal
-        isOpen={showPurchaseModal}
-        onClose={() => setShowPurchaseModal(false)}
-        product={{
-          id: product.product_id,
-          name: product.name,
-          price: product.price,
-        }}
-        quantity={quantity}
-      />
+      {/* Purchase Modal */}
+      {product && (
+        <PurchaseModal
+          isOpen={showPurchaseModal}
+          onClose={() => setShowPurchaseModal(false)}
+          product={{
+            id: product.product_id,
+            name: product.name,
+            price: product.price,
+          }}
+          quantity={quantity}
+          
+        />
+      )}
     </div>
   )
 }

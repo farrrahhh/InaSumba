@@ -172,11 +172,11 @@ export default function PaymentPage() {
                   <h3 className="font-semibold text-blue-900 mb-2">How to Pay with QRIS:</h3>
                   <ol className="list-decimal list-inside space-y-2 text-blue-800 text-sm">
                     <li>Open your mobile banking or e-wallet app</li>
-                    <li>Select "Scan QR" or "QRIS" feature</li>
+                    <li>Select &quot;Scan QR&quot; or &quot;QRIS&quot; feature</li>
                     <li>Scan the QR code on the right</li>
                     <li>Verify the payment amount</li>
                     <li>Complete the payment</li>
-                    <li>Click "I have paid" button below</li>
+                    <li>Click &quot;I have paid&quot; button below</li>
                   </ol>
                 </div>
 

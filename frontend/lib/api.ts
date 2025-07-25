@@ -51,13 +51,12 @@ export interface Product {
   weaver_id: string
 }
 
-
-
 export interface Transaction {
   transaction_id: string
   user_id: string
   product_id: string
   product_name: string
+  quantity: number
   address: string
   phone_number: string
   resi?: string
@@ -84,28 +83,42 @@ export interface PaymentDetails {
   status: string
 }
 
-export interface TransactionData {
-  product: {
-    id: string
-    name: string
-    price: number
-  }
-  quantity: number
-  address: string
-  phoneNumber: string
-  subtotal: number
-  shipping: number
-  total: number
-  transactionId: string
+export interface QRISResponse {
+  transaction_id: string
+  qris_code: string
+  total_amount: number
+  product_name: string
+}
+
+export interface PaymentConfirmResponse {
+  message: string
+  transaction_id: string
+  resi: string
   status: string
-  createdAt: string
-  paidAt?: string
+}
+
+export interface TransactionData {
+  transaction_id: string
+  product_name: string
   resi?: string
+  status: string
+  address: string
+  phone_number: string
+  total_price: number
+  transaction_date: string
 }
 
 export interface ProductWithWeaver extends Product {
   weaver: Weaver
 }
+
+export interface UpdateOrderStatusResponse {
+  transaction_id: string
+  status: string
+  resi?: string
+  message?: string
+}
+
 // --- API Calls ---
 export const api = {
   async getProducts(): Promise<Product[]> {
@@ -120,7 +133,6 @@ export const api = {
     console.log('Fetching product:', productId);
     const response = await fetch(`${API_BASE_URL}/products/${productId}`)
     console.log('Response status:', response.status);
-    console.log('Response headers:', response.headers);
     
     if (!response.ok) {
       if (response.status === 404) return null
@@ -134,8 +146,7 @@ export const api = {
     return data;
   },
   
-
-  async createPurchase(buyRequest: BuyRequest): Promise<{ transaction_id: string; total_price: number }> {
+  async createPurchase(buyRequest: BuyRequest): Promise<Transaction> {
     const response = await fetch(`${API_BASE_URL}/buy`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -157,7 +168,7 @@ export const api = {
     return await response.json()
   },
 
-  async generateQRIS(transactionId: string): Promise<{ qris_code: string; total_amount: number }> {
+  async generateQRIS(transactionId: string): Promise<QRISResponse> {
     const response = await fetch(`${API_BASE_URL}/payment/${transactionId}/qris`, {
       method: "POST",
     })
@@ -168,7 +179,7 @@ export const api = {
     return await response.json()
   },
 
-  async confirmPayment(transactionId: string): Promise<{ resi: string; status: string }> {
+  async confirmPayment(transactionId: string): Promise<PaymentConfirmResponse> {
     const response = await fetch(`${API_BASE_URL}/payment/${transactionId}/confirm`, {
       method: "POST",
     })
@@ -179,11 +190,36 @@ export const api = {
     return await response.json()
   },
 
+  async getUserTransactions(userId: string): Promise<Transaction[]> {
+    const response = await fetch(`${API_BASE_URL}/transactions/user/${userId}`)
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.detail || "Failed to fetch user transactions")
+    }
+    return await response.json()
+  },
+
   async trackOrder(transactionId: string): Promise<TransactionData> {
     const response = await fetch(`${API_BASE_URL}/track/${transactionId}`)
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
       throw new Error(errorData.detail || "Failed to track order")
+    }
+    return await response.json()
+  },
+
+  async updateOrderStatus(transactionId: string, newStatus: string, resi?: string): Promise<UpdateOrderStatusResponse> {
+    const body: Record<string, unknown> = { new_status: newStatus }
+    if (resi) body.resi = resi
+
+    const response = await fetch(`${API_BASE_URL}/orders/${transactionId}/status`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    })
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.detail || "Failed to update order status")
     }
     return await response.json()
   },
