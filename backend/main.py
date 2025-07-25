@@ -60,7 +60,7 @@ def get_db():
         yield db
     finally:
         db.close()
-    return {"message": "Welcome to the FastAPI application!"}
+    
 
 @app.on_event("startup")
 def on_startup():
@@ -125,3 +125,6 @@ async def get_user_character_conversation(user_id: str, character_id: str, db: S
 @app.get("/")
 async def read_root():
     return {"message": "Welcome to the FastAPI application!"}
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", host="0.0.0.0", port=8000)
