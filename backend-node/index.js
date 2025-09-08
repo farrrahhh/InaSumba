@@ -10,7 +10,6 @@ import translatorRoutes from "./routes/translator.js";
 import classifierRoutes from "./routes/classifier.js";
 import ecommerceRoutes from "./routes/ecommerce.js";
 import { apiLogger } from "./middleware/api-logger.js";
-import { logger } from "./utils/logger.js";
 import fs from "fs";
 import path from "path";
 
