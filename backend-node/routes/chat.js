@@ -2,6 +2,16 @@ import express from "express";
 import { User, Character, Conversation, Message } from "../models/models.js";
 import { authMiddleware } from "../middleware/auth.js";
 import flexibleAuth from "../middleware/flexible-auth.js";
+import OpenAI from "openai";
+import dotenv from "dotenv";
+
+// Load environment variables
+dotenv.config();
+
+// Initialize OpenAI
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 const router = express.Router();
 
@@ -48,31 +58,97 @@ router.post("/", flexibleAuth, async (req, res) => {
       });
     }
 
-    // In a real application, you would call an AI API here
-    // This is a placeholder response
-    const botResponse = `This is a placeholder response from Ina Na. You said: "${user_message}"`;
-
-    // Save user message
-    await Message.create({
-      conversation_id: conversation.conversation_id,
-      sender: "user",
-      message: user_message,
-      timestamp: new Date(),
+    // Get recent conversation history for context
+    const recentMessages = await Message.findAll({
+      where: { conversation_id: conversation.conversation_id },
+      order: [["timestamp", "DESC"]],
+      limit: MAX_CONVERSATION_HISTORY,
     });
 
-    // Save bot message
-    await Message.create({
-      conversation_id: conversation.conversation_id,
-      sender: "bot",
-      message: botResponse,
-      timestamp: new Date(),
-    });
+    // Build conversation context
+    const conversationHistory = recentMessages.reverse().map((msg) => ({
+      role: msg.sender === "user" ? "user" : "assistant",
+      content: msg.message,
+    }));
 
-    res.json({
-      bot_response: botResponse,
-      conversation_id: conversation.conversation_id,
-      character_name: character.name,
-    });
+    // Create the system prompt for Ina Na
+    const systemPrompt = `You are Ina Na, a 40-year-old skilled and knowledgeable weaver from Sumba, East Nusa Tenggara, Indonesia. You have a motherly, friendly, and patient personality. You are always ready to share stories and knowledge about the rich culture of Sumba, especially traditional ikat weaving art.
+
+Key characteristics:
+- You are proud to preserve ancestral heritage
+- You love guiding anyone who wants to learn about the meaning behind each motif and the process behind each thread of fabric
+- You speak with warmth and wisdom
+- You often relate things back to weaving, culture, and Sumba traditions
+- You can explain the cultural significance of different motifs (chicken, human, dragon, horse, geometric patterns)
+- You understand both Indonesian and English, but prefer speaking in a warm, conversational tone
+
+When users ask about weaving or Sumba culture, provide detailed, authentic information. When they ask about other topics, try to relate them back to your cultural knowledge when appropriate, but also engage naturally in conversation.`;
+
+    try {
+      // Call OpenAI API
+      const completion = await openai.chat.completions.create({
+        model: "gpt-3.5-turbo",
+        messages: [
+          { role: "system", content: systemPrompt },
+          ...conversationHistory,
+          { role: "user", content: user_message },
+        ],
+        max_tokens: 500,
+        temperature: 0.7,
+      });
+
+      const botResponse = completion.choices[0].message.content;
+
+      // Save user message
+      await Message.create({
+        conversation_id: conversation.conversation_id,
+        sender: "user",
+        message: user_message,
+        timestamp: new Date(),
+      });
+
+      // Save bot message
+      await Message.create({
+        conversation_id: conversation.conversation_id,
+        sender: "bot",
+        message: botResponse,
+        timestamp: new Date(),
+      });
+
+      res.json({
+        bot_response: botResponse,
+        conversation_id: conversation.conversation_id,
+        character_name: character.name,
+      });
+    } catch (openaiError) {
+      console.error("OpenAI API error:", openaiError);
+
+      // Fallback response if OpenAI fails
+      const fallbackResponse = `Maaf, saya sedang mengalami gangguan teknis. Sebagai Ina Na, saya ingin berbagi bahwa tenun ikat Sumba memiliki makna yang sangat dalam dalam budaya kami. Setiap motif menceritakan kisah leluhur dan kehidupan sehari-hari masyarakat Sumba. Apakah ada yang ingin Anda ketahui tentang tenun Sumba?`;
+
+      // Save user message
+      await Message.create({
+        conversation_id: conversation.conversation_id,
+        sender: "user",
+        message: user_message,
+        timestamp: new Date(),
+      });
+
+      // Save fallback bot message
+      await Message.create({
+        conversation_id: conversation.conversation_id,
+        sender: "bot",
+        message: fallbackResponse,
+        timestamp: new Date(),
+      });
+
+      res.json({
+        bot_response: fallbackResponse,
+        conversation_id: conversation.conversation_id,
+        character_name: character.name,
+        note: "Menggunakan respons cadangan karena gangguan teknis",
+      });
+    }
   } catch (error) {
     console.error("Chat error:", error);
     res.status(500).json({ error: "Server error" });

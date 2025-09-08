@@ -1,5 +1,6 @@
 import express from "express";
 import { v4 as uuidv4 } from "uuid";
+import { Op } from "sequelize";
 import { User, Product, Weaver, Transaction } from "../models/models.js";
 import flexibleAuth from "../middleware/flexible-auth.js";
 

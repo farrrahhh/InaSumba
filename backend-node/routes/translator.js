@@ -2,6 +2,16 @@ import express from "express";
 import { User } from "../models/models.js";
 import { authMiddleware } from "../middleware/auth.js";
 import flexibleAuth from "../middleware/flexible-auth.js";
+import OpenAI from "openai";
+import dotenv from "dotenv";
+
+// Load environment variables
+dotenv.config();
+
+// Initialize OpenAI
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 const router = express.Router();
 
@@ -41,22 +51,100 @@ router.post("/", flexibleAuth, async (req, res) => {
       });
     }
 
-    // This is a placeholder for actual translation
-    // In a real app, you would integrate with a translation API
+    // Prepare translation using OpenAI
     const startTime = new Date();
-    const translatedText = `This is a placeholder translation of: "${sumba_text}"`;
-    const culturalNotes = "These are placeholder cultural notes";
-    const processingTime = (new Date() - startTime) / 1000;
 
-    res.json({
-      original_text: sumba_text,
-      translated_text: translatedText,
-      source_language: "sumba",
-      target_language,
-      confidence_score: 0.85,
-      cultural_notes: culturalNotes,
-      processing_time: processingTime,
-    });
+    try {
+      // Determine target language name
+      const targetLanguageName =
+        target_language === "id" ? "Indonesian" : "English";
+
+      // Create system prompt for translation
+      const systemPrompt = `You are an expert translator specializing in Sumba language and culture. Translate the given Sumba text to ${targetLanguageName}. 
+
+Important guidelines:
+1. Provide accurate translation that preserves the cultural meaning
+2. If the text contains cultural terms or concepts specific to Sumba, explain them briefly
+3. Maintain the tone and formality of the original text
+4. If you're unsure about certain words, provide the best approximation and note any uncertainty
+
+Please respond with a JSON object containing:
+- "translated_text": the translation
+- "cultural_notes": any important cultural context or explanations
+- "confidence": a number between 0 and 1 indicating translation confidence`;
+
+      // Call OpenAI API
+      const completion = await openai.chat.completions.create({
+        model: "gpt-3.5-turbo",
+        messages: [
+          { role: "system", content: systemPrompt },
+          {
+            role: "user",
+            content: `Translate this Sumba text to ${targetLanguageName}: "${sumba_text}"${
+              context ? ` Context: ${context}` : ""
+            }`,
+          },
+        ],
+        max_tokens: 1000,
+        temperature: 0.3,
+      });
+
+      const aiResponse = completion.choices[0].message.content;
+
+      // Try to parse JSON response
+      let translatedText, culturalNotes, confidence;
+      try {
+        const parsedResponse = JSON.parse(aiResponse);
+        translatedText = parsedResponse.translated_text || aiResponse;
+        culturalNotes =
+          parsedResponse.cultural_notes ||
+          "Translation completed using AI assistance";
+        confidence = parsedResponse.confidence || 0.85;
+      } catch (parseError) {
+        // If JSON parsing fails, use the raw response
+        translatedText = aiResponse;
+        culturalNotes = "Translation completed using AI assistance";
+        confidence = 0.8;
+      }
+
+      const processingTime = (new Date() - startTime) / 1000;
+
+      res.json({
+        original_text: sumba_text,
+        translated_text: translatedText,
+        source_language: "sumba",
+        target_language,
+        confidence_score: confidence,
+        cultural_notes: culturalNotes,
+        processing_time: processingTime,
+      });
+    } catch (openaiError) {
+      console.error("OpenAI API error:", openaiError);
+
+      // Fallback translation if OpenAI fails
+      const fallbackTranslation =
+        target_language === "id"
+          ? `Terjemahan tidak tersedia untuk: "${sumba_text}". Mohon coba lagi nanti.`
+          : `Translation not available for: "${sumba_text}". Please try again later.`;
+
+      const fallbackNotes =
+        target_language === "id"
+          ? "Menggunakan respons cadangan karena gangguan layanan terjemahan"
+          : "Using fallback response due to translation service disruption";
+
+      const processingTime = (new Date() - startTime) / 1000;
+
+      res.json({
+        original_text: sumba_text,
+        translated_text: fallbackTranslation,
+        source_language: "sumba",
+        target_language,
+        confidence_score: 0.5,
+        cultural_notes: fallbackNotes,
+        processing_time: processingTime,
+        note: "Fallback translation used due to service issue",
+      });
+    }
   } catch (error) {
     console.error("Translation error:", error);
     res.status(500).json({ error: "Server error" });

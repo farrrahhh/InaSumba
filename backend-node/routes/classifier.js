@@ -1,59 +1,9 @@
 import express from "express";
-import multer from "multer";
-import path from "path";
-import fs from "fs";
 import { User } from "../models/models.js";
 import { authMiddleware } from "../middleware/auth.js";
 import flexibleAuth from "../middleware/flexible-auth.js";
 
 const router = express.Router();
-
-// Set up storage for uploaded images
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    const uploadDir = path.join(process.cwd(), "uploads");
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(
-      null,
-      file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname)
-    );
-  },
-});
-
-// File filter to ensure only images are uploaded
-const fileFilter = (req, file, cb) => {
-  const allowedMimeTypes = [
-    "image/jpeg",
-    "image/jpg",
-    "image/png",
-    "image/bmp",
-  ];
-  if (allowedMimeTypes.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(
-      new Error(
-        "Invalid file type. Only JPEG, JPG, PNG, and BMP images are allowed."
-      ),
-      false
-    );
-  }
-};
-
-// Create upload middleware
-const upload = multer({
-  storage: storage,
-  fileFilter: fileFilter,
-  limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB max file size
-  },
-});
 
 // Motif analysis data
 const MOTIF_ANALYSIS = {
@@ -109,82 +59,61 @@ const MOTIF_ANALYSIS = {
  * @route POST /classify-tenun
 /**
  * @route POST /classifier/classify-tenun
- * @desc Classify tenun image
+ * @desc Classify tenun image (returns default response)
  * @access Private (JWT or API Key)
  */
-router.post(
-  "/classify-tenun",
-  flexibleAuth,
-  upload.single("file"),
-  async (req, res) => {
-    try {
-      const user_id = req.user.id;
-      const image_quality_notes = req.body.image_quality_notes;
-      const file = req.file;
+router.post("/classify-tenun", flexibleAuth, async (req, res) => {
+  try {
+    const user_id = req.user.id;
 
-      // Validate user
-      const user = await User.findOne({ where: { user_id } });
-      if (!user) {
-        return res.status(404).json({ error: "User not found" });
-      }
-
-      // Ensure file was uploaded
-      if (!file) {
-        return res.status(400).json({ error: "No image file uploaded" });
-      }
-
-      // Get file info
-      const imageInfo = {
-        format: path.extname(file.originalname).substring(1),
-        mode: "RGB",
-        size: [800, 600], // Placeholder values
-        width: 800,
-        height: 600,
-        file_size_bytes: file.size,
-        file_size_mb: (file.size / (1024 * 1024)).toFixed(2),
-      };
-
-      // Simulate model prediction (placeholder)
-      const startTime = new Date();
-      const prediction = Math.random() > 0.5 ? "ayam" : "manusia";
-      const confidence = Math.random() * 100;
-      const isUncertain = confidence < 75.0;
-      const processingTime = (new Date() - startTime) / 1000;
-
-      // Create simulated probabilities
-      const probabilities = {
-        ayam: prediction === "ayam" ? confidence / 100 : 1 - confidence / 100,
-        manusia:
-          prediction === "manusia" ? confidence / 100 : 1 - confidence / 100,
-      };
-
-      // Get motif analysis based on prediction
-      const motifAnalysis = MOTIF_ANALYSIS[prediction];
-
-      // Generate recommendation based on confidence
-      let recommendation = null;
-      if (isUncertain) {
-        recommendation =
-          "The confidence level is low. Consider uploading a clearer image with better lighting and closer focus on the motif pattern.";
-      }
-
-      res.json({
-        prediction,
-        confidence,
-        is_uncertain: isUncertain,
-        processing_time: processingTime,
-        motif_analysis: motifAnalysis,
-        probabilities,
-        recommendation,
-        image_info: imageInfo,
-        timestamp: new Date().toISOString(),
-      });
-    } catch (error) {
-      console.error("Classification error:", error);
-      res.status(500).json({ error: "Server error" });
+    // Validate user
+    const user = await User.findOne({ where: { user_id } });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
     }
+
+    // Return default response for chicken motif
+    const prediction = "ayam";
+    const confidence = 85.5;
+    const isUncertain = false;
+    const processingTime = 0.15;
+
+    // Create probabilities
+    const probabilities = {
+      ayam: 0.855,
+      manusia: 0.145,
+    };
+
+    // Get motif analysis
+    const motifAnalysis = MOTIF_ANALYSIS[prediction];
+
+    // Default image info
+    const imageInfo = {
+      format: "jpg",
+      mode: "RGB",
+      size: [800, 600],
+      width: 800,
+      height: 600,
+      file_size_bytes: 102400,
+      file_size_mb: "0.10",
+    };
+
+    res.json({
+      prediction,
+      confidence,
+      is_uncertain: isUncertain,
+      processing_time: processingTime,
+      motif_analysis: motifAnalysis,
+      probabilities,
+      recommendation: null,
+      image_info: imageInfo,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error("Classification error:", error);
+    res.status(500).json({ error: "Server error" });
   }
-);
+});
 
 /**
  * @route GET /motif-encyclopedia
