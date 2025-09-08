@@ -1,76 +1,15 @@
-import fs from "fs";
-import path from "path";
-import { createGzip } from "zlib";
+/**
+ * Simple Logger
+ *
+ * A serverless-friendly logger that doesn't attempt to write to the filesystem.
+ * This version logs to console only, making it compatible with Vercel.
+ */
 
-// Constants
-const LOG_DIR = path.join(process.cwd(), "logs");
-const MAX_LOG_SIZE_BYTES = 10 * 1024 * 1024; // 10MB
 const LOG_LEVELS = {
   ERROR: "ERROR",
   WARN: "WARN",
   INFO: "INFO",
   DEBUG: "DEBUG",
-};
-
-// Ensure log directory exists
-if (!fs.existsSync(LOG_DIR)) {
-  fs.mkdirSync(LOG_DIR, { recursive: true });
-}
-
-// Log files
-const API_LOG_FILE = path.join(LOG_DIR, "api_requests.log");
-const ERROR_LOG_FILE = path.join(LOG_DIR, "errors.log");
-const SERVER_LOG_FILE = path.join(LOG_DIR, "server.log");
-
-/**
- * Rotates a log file if it exceeds the maximum size
- * @param {string} logFile - Path to the log file
- */
-const rotateLogFileIfNeeded = (logFile) => {
-  try {
-    if (fs.existsSync(logFile)) {
-      const stats = fs.statSync(logFile);
-
-      if (stats.size > MAX_LOG_SIZE_BYTES) {
-        const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-        const rotatedFile = `${logFile}.${timestamp}`;
-        const gzipFile = `${rotatedFile}.gz`;
-
-        // Create gzip stream
-        const gzip = createGzip();
-        const source = fs.createReadStream(logFile);
-        const destination = fs.createWriteStream(gzipFile);
-
-        // Pipe the log file to gzip
-        source.pipe(gzip).pipe(destination);
-
-        // When compression is complete, truncate the original log file
-        destination.on("finish", () => {
-          fs.truncateSync(logFile, 0);
-          console.log(`Log file rotated and compressed: ${gzipFile}`);
-        });
-      }
-    }
-  } catch (error) {
-    console.error(`Error rotating log file: ${error.message}`);
-  }
-};
-
-/**
- * Writes a log entry to a file
- * @param {string} logFile - Path to the log file
- * @param {string} entry - Log entry to write
- */
-const writeToLog = (logFile, entry) => {
-  try {
-    // Rotate log file if needed
-    rotateLogFileIfNeeded(logFile);
-
-    // Write to log file
-    fs.appendFileSync(logFile, `${entry}\n\n`);
-  } catch (error) {
-    console.error(`Error writing to log: ${error.message}`);
-  }
 };
 
 /**
@@ -99,8 +38,6 @@ export const logger = {
   error: (message, data = {}) => {
     const entry = createLogEntry(LOG_LEVELS.ERROR, message, data);
     console.error(entry);
-    writeToLog(ERROR_LOG_FILE, entry);
-    writeToLog(SERVER_LOG_FILE, entry);
   },
 
   /**
@@ -111,7 +48,6 @@ export const logger = {
   warn: (message, data = {}) => {
     const entry = createLogEntry(LOG_LEVELS.WARN, message, data);
     console.warn(entry);
-    writeToLog(SERVER_LOG_FILE, entry);
   },
 
   /**
@@ -122,7 +58,6 @@ export const logger = {
   info: (message, data = {}) => {
     const entry = createLogEntry(LOG_LEVELS.INFO, message, data);
     console.log(entry);
-    writeToLog(SERVER_LOG_FILE, entry);
   },
 
   /**
@@ -134,7 +69,6 @@ export const logger = {
     if (process.env.NODE_ENV !== "production") {
       const entry = createLogEntry(LOG_LEVELS.DEBUG, message, data);
       console.log(entry);
-      writeToLog(SERVER_LOG_FILE, entry);
     }
   },
 
@@ -163,7 +97,6 @@ User ID: ${user_id}
 IP: ${clientIp}`;
 
       console.log(entry);
-      writeToLog(API_LOG_FILE, entry);
     } catch (error) {
       console.error(`Error logging API request: ${error.message}`);
     }

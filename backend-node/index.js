@@ -9,15 +9,6 @@ import chatRoutes from "./routes/chat.js";
 import translatorRoutes from "./routes/translator.js";
 import classifierRoutes from "./routes/classifier.js";
 import ecommerceRoutes from "./routes/ecommerce.js";
-import { apiLogger } from "./middleware/api-logger.js";
-import fs from "fs";
-import path from "path";
-
-// Ensure logs directory exists
-const LOG_DIR = path.join(process.cwd(), "logs");
-if (!fs.existsSync(LOG_DIR)) {
-  fs.mkdirSync(LOG_DIR, { recursive: true });
-}
 
 // Initialize Express
 const app = express();
@@ -38,9 +29,6 @@ const corsOptions = {
 // Middleware
 app.use(cors(corsOptions));
 app.use(bodyParser.json());
-
-// API Logger middleware
-app.use(apiLogger);
 
 // Additional CORS headers middleware for edge cases
 app.use((req, res, next) => {
