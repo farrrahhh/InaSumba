@@ -37,7 +37,7 @@ router.get("/products/:product_id", async (req, res) => {
     // Get product with its weaver
     const product = await Product.findOne({
       where: { product_id: productId },
-      include: [{ model: Weaver, as: "weaver" }],
+      include: [{ model: Weaver }],
     });
 
     if (!product) {
