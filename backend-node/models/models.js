@@ -185,7 +185,21 @@ const Weaver = sequelize.define(
       type: DataTypes.STRING(20),
     },
     specialization: {
-      type: DataTypes.ARRAY(DataTypes.STRING),
+      type: DataTypes.JSON,
+      get() {
+        const rawValue = this.getDataValue("specialization");
+        return rawValue
+          ? Array.isArray(rawValue)
+            ? rawValue
+            : JSON.parse(rawValue)
+          : [];
+      },
+      set(value) {
+        this.setDataValue(
+          "specialization",
+          value ? (typeof value === "string" ? JSON.parse(value) : value) : []
+        );
+      },
     },
   },
   {

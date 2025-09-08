@@ -53,6 +53,13 @@ app.use("/translator", translatorRoutes);
 app.use("/classifier", classifierRoutes);
 app.use("/ecommerce", ecommerceRoutes);
 
+// Import public routes
+import publicRoutes from "./routes/public.js";
+app.use("/public", publicRoutes);
+
+// Import database initialization
+import initializeDatabase from "./config/initialize-db.js";
+
 // Database connection check endpoint
 app.get("/db-check", async (req, res) => {
   try {
@@ -69,6 +76,8 @@ sequelize
   .sync({ alter: false })
   .then(() => {
     console.log("Database synchronized successfully");
+    // Initialize database with default data
+    initializeDatabase();
   })
   .catch((error) => {
     console.error("Failed to sync database:", error);

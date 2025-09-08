@@ -29,6 +29,41 @@ router.get("/", flexibleAuth, async (req, res) => {
 });
 
 /**
+ * @route GET /profile/:user_id
+ * @desc Get user profile by ID
+ * @access Public
+ */
+router.get("/:user_id", async (req, res) => {
+  try {
+    const { user_id } = req.params;
+
+    // Find user by ID
+    let user = await User.findOne({
+      where: { user_id },
+      attributes: { exclude: ["password"] }, // Exclude password from response
+    });
+
+    // If user doesn't exist, create a temporary one
+    if (!user) {
+      user = await User.create({
+        user_id,
+        name: "Guest User",
+        email: `guest_${user_id}@example.com`,
+        password: "temporary-password",
+      });
+      // Exclude password from the response
+      user = user.toJSON();
+      delete user.password;
+    }
+
+    res.json(user);
+  } catch (error) {
+    console.error("Profile error:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+/**
  * @route PUT /profile
  * @desc Update user profile
  * @access Public
