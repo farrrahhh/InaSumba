@@ -93,7 +93,7 @@ app.use("/classifier", classifierRoutes);
 app.use("/ecommerce", ecommerceRoutes);
 
 // Import public routes
-import publicRoutes from "./routes/public.js";
+import { router as publicRoutes } from "./routes/public.js";
 app.use("/public", publicRoutes);
 
 // Import database initialization
