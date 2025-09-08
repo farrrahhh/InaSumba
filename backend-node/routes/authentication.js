@@ -1,8 +1,8 @@
-import express from 'express';
-import bcrypt from 'bcryptjs';
-import crypto from 'crypto';
-import { User } from '../models/models.js';
-import { generateToken, authMiddleware } from '../middleware/auth.js';
+import express from "express";
+import bcrypt from "bcryptjs";
+import crypto from "crypto";
+import { User } from "../models/models.js";
+import { generateToken, authMiddleware } from "../middleware/auth.js";
 
 const router = express.Router();
 
@@ -11,7 +11,7 @@ const router = express.Router();
  * @returns {string} The generated user ID
  */
 function generateUserId() {
-  return crypto.randomBytes(4).toString('hex').toUpperCase();
+  return crypto.randomBytes(4).toString("hex").toUpperCase();
 }
 
 /**
@@ -19,25 +19,29 @@ function generateUserId() {
  * @desc Register a new user
  * @access Public
  */
-router.post('/register', async (req, res) => {
+router.post("/register", async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
     // Check required fields
     if (!name || !email || !password) {
-      return res.status(400).json({ error: 'Please provide all required fields' });
+      return res
+        .status(400)
+        .json({ error: "Please provide all required fields" });
     }
 
     // Check if user already exists
     const existingUser = await User.findOne({ where: { email } });
     if (existingUser) {
-      return res.status(400).json({ error: 'User with this email already exists' });
+      return res
+        .status(400)
+        .json({ error: "User with this email already exists" });
     }
 
     // Generate user ID
     let userId = generateUserId();
     let userWithId = await User.findOne({ where: { user_id: userId } });
-    
+
     // Ensure user ID is unique
     while (userWithId) {
       userId = generateUserId();
@@ -53,7 +57,7 @@ router.post('/register', async (req, res) => {
       user_id: userId,
       name,
       email,
-      password: hashedPassword
+      password: hashedPassword,
     });
 
     // Return user data (excluding password)
@@ -61,15 +65,15 @@ router.post('/register', async (req, res) => {
       user_id: newUser.user_id,
       name: newUser.name,
       email: newUser.email,
-      token: generateToken({ 
+      token: generateToken({
         id: newUser.user_id,
         name: newUser.name,
-        email: newUser.email
-      })
+        email: newUser.email,
+      }),
     });
   } catch (error) {
-    console.error('Register error:', error);
-    res.status(500).json({ error: 'Server error' });
+    console.error("Register error:", error);
+    res.status(500).json({ error: "Server error" });
   }
 });
 
@@ -78,25 +82,27 @@ router.post('/register', async (req, res) => {
  * @desc Login user
  * @access Public
  */
-router.post('/login', async (req, res) => {
+router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
     // Check required fields
     if (!email || !password) {
-      return res.status(400).json({ error: 'Please provide email and password' });
+      return res
+        .status(400)
+        .json({ error: "Please provide email and password" });
     }
 
     // Find user by email
     const user = await User.findOne({ where: { email } });
     if (!user) {
-      return res.status(401).json({ error: 'Invalid email or password' });
+      return res.status(401).json({ error: "Invalid email or password" });
     }
 
     // Compare passwords
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ error: 'Invalid email or password' });
+      return res.status(401).json({ error: "Invalid email or password" });
     }
 
     // Return user data (excluding password)
@@ -104,15 +110,15 @@ router.post('/login', async (req, res) => {
       user_id: user.user_id,
       name: user.name,
       email: user.email,
-      token: generateToken({ 
+      token: generateToken({
         id: user.user_id,
         name: user.name,
-        email: user.email
-      })
+        email: user.email,
+      }),
     });
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ error: 'Server error' });
+    console.error("Login error:", error);
+    res.status(500).json({ error: "Server error" });
   }
 });
 
