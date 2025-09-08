@@ -58,8 +58,13 @@ router.get("/:user_id", async (req, res) => {
 
     res.json(user);
   } catch (error) {
-    console.error("Profile error:", error);
-    res.status(500).json({ error: "Server error" });
+    console.error("Profile by ID error:", error);
+    // Send detailed error for debugging
+    res.status(500).json({
+      error: "Server error",
+      message: error.message,
+      stack: process.env.NODE_ENV === "production" ? "🥞" : error.stack,
+    });
   }
 });
 

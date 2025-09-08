@@ -12,13 +12,53 @@ import chatRoutes from "./routes/chat.js";
 import translatorRoutes from "./routes/translator.js";
 import classifierRoutes from "./routes/classifier.js";
 import ecommerceRoutes from "./routes/ecommerce.js";
+import { apiLogger } from "./middleware/api-logger.js";
+import { logger } from "./utils/logger.js";
+import fs from "fs";
+import path from "path";
+
+// Ensure logs directory exists
+const LOG_DIR = path.join(process.cwd(), "logs");
+if (!fs.existsSync(LOG_DIR)) {
+  fs.mkdirSync(LOG_DIR, { recursive: true });
+}
 
 // Initialize Express
 const app = express();
 
+// Configure CORS
+const corsOptions = {
+  origin: [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "https://inasumba.vercel.app",
+    "https://*.vercel.app",
+    "*",
+  ],
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+};
+
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(bodyParser.json());
+
+// API Logger middleware
+app.use(apiLogger);
+
+// Additional CORS headers middleware for edge cases
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept, Authorization, x-auth-token, x-api-key"
+  );
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+  next();
+});
 
 // PostgreSQL connection pool
 const pool = new pg.Pool({
@@ -44,6 +84,9 @@ app.get("/api/health", (req, res) => {
     timestamp: new Date().toISOString(),
   });
 });
+
+// Handle preflight OPTIONS requests explicitly
+app.options("*", cors(corsOptions));
 
 // Register routes
 app.use("/auth", authRoutes);
