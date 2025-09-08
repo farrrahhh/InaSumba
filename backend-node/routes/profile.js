@@ -8,7 +8,7 @@ const router = express.Router();
 /**
  * @route GET /profile
  * @desc Get current user profile
- * @access Private (API Key)
+ * @access Public
  */
 router.get("/", flexibleAuth, async (req, res) => {
   try {
@@ -31,7 +31,7 @@ router.get("/", flexibleAuth, async (req, res) => {
 /**
  * @route PUT /profile
  * @desc Update user profile
- * @access Private
+ * @access Public
  */
 router.put("/", flexibleAuth, async (req, res) => {
   try {
@@ -73,7 +73,7 @@ router.put("/", flexibleAuth, async (req, res) => {
 /**
  * @route PUT /profile/password
  * @desc Update user password
- * @access Private
+ * @access Public
  */
 router.put("/password", flexibleAuth, async (req, res) => {
   try {

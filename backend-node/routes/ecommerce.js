@@ -1,7 +1,6 @@
 import express from "express";
 import { v4 as uuidv4 } from "uuid";
 import { User, Product, Weaver, Transaction } from "../models/models.js";
-import { authMiddleware } from "../middleware/auth.js";
 import flexibleAuth from "../middleware/flexible-auth.js";
 
 const router = express.Router();
@@ -292,55 +291,51 @@ router.get("/track/:transaction_id", flexibleAuth, async (req, res) => {
  * @desc Update order status (for admin use)
  * @access Private (should be restricted to admins in a real app)
  */
-router.put(
-  "/orders/:transaction_id/status",
-  authMiddleware,
-  async (req, res) => {
-    try {
-      const transaction_id = req.params.transaction_id;
-      const { new_status, resi } = req.body;
+router.put("/orders/:transaction_id/status", flexibleAuth, async (req, res) => {
+  try {
+    const transaction_id = req.params.transaction_id;
+    const { new_status, resi } = req.body;
 
-      // In a real app, check if user is admin here
+    // In a real app, check if user is admin here
 
-      // Get transaction
-      const transaction = await Transaction.findOne({
-        where: { transaction_id },
-      });
+    // Get transaction
+    const transaction = await Transaction.findOne({
+      where: { transaction_id },
+    });
 
-      if (!transaction) {
-        return res.status(404).json({ error: "Transaction not found" });
-      }
-
-      // Valid status progression
-      const validStatuses = [
-        "pending_payment",
-        "processing",
-        "shipped",
-        "delivered",
-        "cancelled",
-      ];
-      if (!validStatuses.includes(new_status)) {
-        return res.status(400).json({ error: `Invalid status: ${new_status}` });
-      }
-
-      // Update transaction
-      transaction.status = new_status;
-      if (resi) {
-        transaction.resi = resi;
-      }
-      await transaction.save();
-
-      res.json({
-        transaction_id,
-        status: transaction.status,
-        resi: transaction.resi,
-        message: "Order status updated successfully",
-      });
-    } catch (error) {
-      console.error("Error updating order status:", error);
-      res.status(500).json({ error: "Server error" });
+    if (!transaction) {
+      return res.status(404).json({ error: "Transaction not found" });
     }
+
+    // Valid status progression
+    const validStatuses = [
+      "pending_payment",
+      "processing",
+      "shipped",
+      "delivered",
+      "cancelled",
+    ];
+    if (!validStatuses.includes(new_status)) {
+      return res.status(400).json({ error: `Invalid status: ${new_status}` });
+    }
+
+    // Update transaction
+    transaction.status = new_status;
+    if (resi) {
+      transaction.resi = resi;
+    }
+    await transaction.save();
+
+    res.json({
+      transaction_id,
+      status: transaction.status,
+      resi: transaction.resi,
+      message: "Order status updated successfully",
+    });
+  } catch (error) {
+    console.error("Error updating order status:", error);
+    res.status(500).json({ error: "Server error" });
   }
-);
+});
 
 export default router;
