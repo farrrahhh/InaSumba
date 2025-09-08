@@ -20,7 +20,7 @@ const corsOptions = {
     "http://localhost:3000",
     "http://localhost:3001",
     "https://inasumba.vercel.app",
-    "https://ina-sumba.vercel.app"
+    "https://ina-sumba.vercel.app",
   ],
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -79,6 +79,9 @@ app.use("/chat", chatRoutes);
 app.use("/translator", translatorRoutes);
 app.use("/classifier", classifierRoutes);
 app.use("/ecommerce", ecommerceRoutes);
+
+// Add direct /translate route for frontend compatibility
+app.use("/translate", translatorRoutes);
 
 // Database connection check endpoint
 app.get("/db-check", async (req, res) => {
