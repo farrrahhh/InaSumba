@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
 
 // --- Interfaces ---
 export interface TranslateResponse {
@@ -122,7 +122,7 @@ export interface UpdateOrderStatusResponse {
 // --- API Calls ---
 export const api = {
   async getProducts(): Promise<Product[]> {
-    const response = await fetch(`${API_BASE_URL}/products`)
+    const response = await fetch(`${API_BASE_URL}/ecommerce/products`)
     if (!response.ok) {
       throw new Error("Failed to fetch products")
     }
@@ -131,7 +131,7 @@ export const api = {
 
   async getProduct(productId: string): Promise<ProductWithWeaver | null> {
     console.log('Fetching product:', productId);
-    const response = await fetch(`${API_BASE_URL}/products/${productId}`)
+    const response = await fetch(`${API_BASE_URL}/ecommerce/products/${productId}`)
     console.log('Response status:', response.status);
     
     if (!response.ok) {
@@ -147,7 +147,7 @@ export const api = {
   },
   
   async createPurchase(buyRequest: BuyRequest): Promise<Transaction> {
-    const response = await fetch(`${API_BASE_URL}/buy`, {
+    const response = await fetch(`${API_BASE_URL}/ecommerce/buy`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(buyRequest),
@@ -160,7 +160,7 @@ export const api = {
   },
 
   async getPaymentDetails(transactionId: string): Promise<PaymentDetails> {
-    const response = await fetch(`${API_BASE_URL}/payment/${transactionId}`)
+    const response = await fetch(`${API_BASE_URL}/ecommerce/payment/${transactionId}`)
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
       throw new Error(errorData.detail || "Failed to fetch payment details")
@@ -169,7 +169,7 @@ export const api = {
   },
 
   async generateQRIS(transactionId: string): Promise<QRISResponse> {
-    const response = await fetch(`${API_BASE_URL}/payment/${transactionId}/qris`, {
+    const response = await fetch(`${API_BASE_URL}/ecommerce/payment/${transactionId}/qris`, {
       method: "POST",
     })
     if (!response.ok) {
@@ -180,7 +180,7 @@ export const api = {
   },
 
   async confirmPayment(transactionId: string): Promise<PaymentConfirmResponse> {
-    const response = await fetch(`${API_BASE_URL}/payment/${transactionId}/confirm`, {
+    const response = await fetch(`${API_BASE_URL}/ecommerce/payment/${transactionId}/confirm`, {
       method: "POST",
     })
     if (!response.ok) {
@@ -190,8 +190,8 @@ export const api = {
     return await response.json()
   },
 
-  async getUserTransactions(userId: string): Promise<Transaction[]> {
-    const response = await fetch(`${API_BASE_URL}/transactions/user/${userId}`)
+  async getUserTransactions(): Promise<Transaction[]> {
+    const response = await fetch(`${API_BASE_URL}/ecommerce/transactions/user`)
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
       throw new Error(errorData.detail || "Failed to fetch user transactions")
@@ -200,7 +200,7 @@ export const api = {
   },
 
   async trackOrder(transactionId: string): Promise<TransactionData> {
-    const response = await fetch(`${API_BASE_URL}/track/${transactionId}`)
+    const response = await fetch(`${API_BASE_URL}/ecommerce/track/${transactionId}`)
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
       throw new Error(errorData.detail || "Failed to track order")
@@ -212,7 +212,7 @@ export const api = {
     const body: Record<string, unknown> = { new_status: newStatus }
     if (resi) body.resi = resi
 
-    const response = await fetch(`${API_BASE_URL}/orders/${transactionId}/status`, {
+    const response = await fetch(`${API_BASE_URL}/ecommerce/orders/${transactionId}/status`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),

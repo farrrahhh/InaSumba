@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"
 
 export interface ClassificationResponse {
   prediction: string
@@ -49,7 +49,7 @@ export interface ModelInfo {
 }
 
 export async function classifyTenun(
-  file: File,
+  file?: File,
   userId?: string,
   imageQualityNotes?: string,
 ): Promise<ClassificationResponse> {
@@ -58,16 +58,18 @@ export async function classifyTenun(
     userId = typeof window !== "undefined" ? localStorage.getItem("user_id") || "3C69BD32" : "3C69BD32"
   }
 
-  const formData = new FormData()
-  formData.append("file", file)
-  formData.append("user_id", userId)
-  if (imageQualityNotes) {
-    formData.append("image_quality_notes", imageQualityNotes)
+  // Since the backend now returns default response, we just send a simple POST
+  const requestBody = {
+    user_id: userId,
+    ...(imageQualityNotes && { image_quality_notes: imageQualityNotes })
   }
 
-  const response = await fetch(`${API_BASE_URL}/classify-tenun`, {
+  const response = await fetch(`${API_BASE_URL}/classifier/classify-tenun`, {
     method: "POST",
-    body: formData,
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(requestBody),
   })
 
   if (!response.ok) {
@@ -79,7 +81,7 @@ export async function classifyTenun(
 }
 
 export async function getModelInfo(): Promise<ModelInfo> {
-  const response = await fetch(`${API_BASE_URL}/model-info`)
+  const response = await fetch(`${API_BASE_URL}/classifier/model-info`)
 
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`)
@@ -89,7 +91,7 @@ export async function getModelInfo(): Promise<ModelInfo> {
 }
 
 export async function getMotifEncyclopedia(): Promise<MotifEncyclopedia> {
-  const response = await fetch(`${API_BASE_URL}/motif-encyclopedia`)
+  const response = await fetch(`${API_BASE_URL}/classifier/motif-encyclopedia`)
 
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`)
@@ -99,7 +101,7 @@ export async function getMotifEncyclopedia(): Promise<MotifEncyclopedia> {
 }
 
 export async function healthCheck(): Promise<unknown> {
-  const response = await fetch(`${API_BASE_URL}/health`)
+  const response = await fetch(`${API_BASE_URL}/classifier/health`)
 
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`)

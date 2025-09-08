@@ -34,7 +34,7 @@ export default function ChatPage() {
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const audioRef = useRef<HTMLAudioElement>(null)
 
-  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000"
 
   useEffect(() => {
     const storedUserId = localStorage.getItem("user_id") || "3C69BD32"

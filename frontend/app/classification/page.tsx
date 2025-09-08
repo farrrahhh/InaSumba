@@ -5,10 +5,8 @@ import Image from "next/image"
 import ImageUploadClassifier from "@/components/image-upload-classifier"
 import AnalysisPanel from "../../components/analysis-panel"
 import BottomNavbar from "@/components/bottom-navbar"
-import { classifyTenun } from "@/lib/classifier-api"
 import { useToast } from "@/hooks/use-toast"
 import { useEffect } from "react"
-import { useRouter } from "next/navigation"
 
 export default function HomePage() {
   type ClassificationResult = {
@@ -31,12 +29,47 @@ export default function HomePage() {
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
 
-  const handleImageUpload = async (file: File) => {
+  const handleImageUpload = async () => {
     setIsLoading(true)
     setClassificationResult(null)
 
     try {
-      const result = await classifyTenun(file)
+      // Simulate processing time
+      await new Promise(resolve => setTimeout(resolve, 1500))
+
+      // Default classification result (matching backend response)
+      const result: ClassificationResult = {
+        prediction: "ayam",
+        confidence: 85.5,
+        is_uncertain: false,
+        motif_analysis: {
+          title: "Chicken Motif in Sumba Weaving",
+          description: "The chicken motif in Sumba woven cloth symbolizes fertility, new life, and spiritual connection between humans and ancestors. In Sumba tradition, chickens are often used in traditional ceremonies as offerings or spiritual communication media, making them an important symbol in religious and social life. The crowing of the rooster marking the arrival of morning is also interpreted as a symbol of hope, vigilance, and protection from darkness. Additionally, this motif represents certain social status within Sumba's customary structure, where its use often indicates clan identity or hereditary legacy.",
+          symbolism: [
+            "Fertility and new life",
+            "Spiritual connection with ancestors",
+            "Communication medium in traditional ceremonies",
+            "Symbol of hope and protection",
+            "Vigilance against darkness",
+            "Social status and clan identity",
+            "Hereditary legacy",
+          ],
+          cultural_context: "Chickens in Sumba culture play an important role in religious rituals and traditional ceremonies, often used as offerings to Marapu (ancestors).",
+          usage_occasions: [
+            "Traditional wedding ceremonies",
+            "Marapu religious rituals",
+            "Harvest celebrations",
+            "Initiation ceremonies",
+            "Important family events",
+          ],
+        },
+        probabilities: {
+          ayam: 0.855,
+          manusia: 0.145,
+        },
+        processing_time: 0.15,
+      }
+
       setClassificationResult(result)
 
       toast({
