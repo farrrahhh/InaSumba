@@ -9,6 +9,7 @@ import chatRoutes from "./routes/chat.js";
 import translatorRoutes from "./routes/translator.js";
 import classifierRoutes from "./routes/classifier.js";
 import ecommerceRoutes from "./routes/ecommerce.js";
+import initializeDatabase from "./config/initialize-db.js";
 
 // Initialize Express
 const app = express();
@@ -19,9 +20,6 @@ const corsOptions = {
     "http://localhost:3000",
     "http://localhost:3001",
     "https://inasumba.vercel.app",
-    "https://inasumba-git-main-farrahs-projects.vercel.app",
-    "https://inasumba-farahs-projects.vercel.app",
-    "*",
   ],
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -80,13 +78,6 @@ app.use("/chat", chatRoutes);
 app.use("/translator", translatorRoutes);
 app.use("/classifier", classifierRoutes);
 app.use("/ecommerce", ecommerceRoutes);
-
-// Import public routes
-import { router as publicRoutes } from "./routes/public.js";
-app.use("/public", publicRoutes);
-
-// Import database initialization
-import initializeDatabase from "./config/initialize-db.js";
 
 // Database connection check endpoint
 app.get("/db-check", async (req, res) => {
