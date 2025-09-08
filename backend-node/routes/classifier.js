@@ -4,6 +4,7 @@ import path from "path";
 import fs from "fs";
 import { User } from "../models/models.js";
 import { authMiddleware } from "../middleware/auth.js";
+import flexibleAuth from "../middleware/flexible-auth.js";
 
 const router = express.Router();
 
@@ -106,12 +107,14 @@ const MOTIF_ANALYSIS = {
 
 /**
  * @route POST /classify-tenun
+/**
+ * @route POST /classifier/classify-tenun
  * @desc Classify tenun image
- * @access Private
+ * @access Private (JWT or API Key)
  */
 router.post(
   "/classify-tenun",
-  authMiddleware,
+  flexibleAuth,
   upload.single("file"),
   async (req, res) => {
     try {

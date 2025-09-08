@@ -2,7 +2,11 @@ import express from "express";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import { User } from "../models/models.js";
-import { generateToken, authMiddleware } from "../middleware/auth.js";
+import { generateApiKey, authMiddleware } from "../middleware/auth.js";
+import dotenv from "dotenv";
+
+// Load environment variables
+dotenv.config();
 
 const router = express.Router();
 
@@ -65,11 +69,7 @@ router.post("/register", async (req, res) => {
       user_id: newUser.user_id,
       name: newUser.name,
       email: newUser.email,
-      token: generateToken({
-        id: newUser.user_id,
-        name: newUser.name,
-        email: newUser.email,
-      }),
+      api_key: generateApiKey(),
     });
   } catch (error) {
     console.error("Register error:", error);
@@ -110,11 +110,7 @@ router.post("/login", async (req, res) => {
       user_id: user.user_id,
       name: user.name,
       email: user.email,
-      token: generateToken({
-        id: user.user_id,
-        name: user.name,
-        email: user.email,
-      }),
+      api_key: generateApiKey(),
     });
   } catch (error) {
     console.error("Login error:", error);

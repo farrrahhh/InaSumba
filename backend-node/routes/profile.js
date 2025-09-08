@@ -1,16 +1,16 @@
 import express from "express";
 import bcrypt from "bcryptjs";
 import { User } from "../models/models.js";
-import { authMiddleware } from "../middleware/auth.js";
+import flexibleAuth from "../middleware/flexible-auth.js";
 
 const router = express.Router();
 
 /**
  * @route GET /profile
  * @desc Get current user profile
- * @access Private
+ * @access Private (API Key)
  */
-router.get("/", authMiddleware, async (req, res) => {
+router.get("/", flexibleAuth, async (req, res) => {
   try {
     const user = await User.findOne({
       where: { user_id: req.user.id },
@@ -33,7 +33,7 @@ router.get("/", authMiddleware, async (req, res) => {
  * @desc Update user profile
  * @access Private
  */
-router.put("/", authMiddleware, async (req, res) => {
+router.put("/", flexibleAuth, async (req, res) => {
   try {
     const { name, email } = req.body;
 
@@ -75,7 +75,7 @@ router.put("/", authMiddleware, async (req, res) => {
  * @desc Update user password
  * @access Private
  */
-router.put("/password", authMiddleware, async (req, res) => {
+router.put("/password", flexibleAuth, async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
 

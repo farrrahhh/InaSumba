@@ -1,6 +1,7 @@
 import express from "express";
 import { User, Character, Conversation, Message } from "../models/models.js";
 import { authMiddleware } from "../middleware/auth.js";
+import flexibleAuth from "../middleware/flexible-auth.js";
 
 const router = express.Router();
 
@@ -11,9 +12,9 @@ const MAX_CONVERSATION_HISTORY = 20;
 /**
  * @route POST /chat
  * @desc Chat with Ina Na
- * @access Private
+ * @access Private (JWT or API Key)
  */
-router.post("/", authMiddleware, async (req, res) => {
+router.post("/", flexibleAuth, async (req, res) => {
   try {
     const { user_message } = req.body;
     const user_id = req.user.id;
@@ -81,60 +82,56 @@ router.post("/", authMiddleware, async (req, res) => {
 /**
  * @route GET /chat/conversation/:conversation_id
  * @desc Get conversation history
- * @access Private
+ * @access Private (JWT or API Key)
  */
-router.get(
-  "/conversation/:conversation_id",
-  authMiddleware,
-  async (req, res) => {
-    try {
-      const conversation_id = req.params.conversation_id;
-      const user_id = req.user.id;
+router.get("/conversation/:conversation_id", flexibleAuth, async (req, res) => {
+  try {
+    const conversation_id = req.params.conversation_id;
+    const user_id = req.user.id;
 
-      // Get conversation
-      const conversation = await Conversation.findOne({
-        where: { conversation_id, user_id },
-      });
+    // Get conversation
+    const conversation = await Conversation.findOne({
+      where: { conversation_id, user_id },
+    });
 
-      if (!conversation) {
-        return res.status(404).json({ error: "Conversation not found" });
-      }
-
-      // Get character
-      const character = await Character.findOne({
-        where: { character_id: conversation.character_id },
-      });
-
-      // Get messages
-      const messages = await Message.findAll({
-        where: { conversation_id },
-        order: [["timestamp", "ASC"]],
-      });
-
-      res.json({
-        conversation_id,
-        user_id: conversation.user_id,
-        character_name: character ? character.name : "Unknown",
-        messages: messages.map((msg) => ({
-          message_id: msg.message_id,
-          sender: msg.sender,
-          message: msg.message,
-          timestamp: msg.timestamp,
-        })),
-      });
-    } catch (error) {
-      console.error("Get conversation error:", error);
-      res.status(500).json({ error: "Server error" });
+    if (!conversation) {
+      return res.status(404).json({ error: "Conversation not found" });
     }
+
+    // Get character
+    const character = await Character.findOne({
+      where: { character_id: conversation.character_id },
+    });
+
+    // Get messages
+    const messages = await Message.findAll({
+      where: { conversation_id },
+      order: [["timestamp", "ASC"]],
+    });
+
+    res.json({
+      conversation_id,
+      user_id: conversation.user_id,
+      character_name: character ? character.name : "Unknown",
+      messages: messages.map((msg) => ({
+        message_id: msg.message_id,
+        sender: msg.sender,
+        message: msg.message,
+        timestamp: msg.timestamp,
+      })),
+    });
+  } catch (error) {
+    console.error("Get conversation error:", error);
+    res.status(500).json({ error: "Server error" });
   }
-);
+});
 
 /**
  * @route GET /chat/user/:user_id/conversations
  * @desc Get all conversations for a user
- * @access Private
+ * @access Private (JWT or API Key)
  */
-router.get("/user/conversations", authMiddleware, async (req, res) => {
+router.get("/user/conversations", flexibleAuth, async (req, res) => {
   try {
     const user_id = req.user.id;
 
@@ -177,11 +174,11 @@ router.get("/user/conversations", authMiddleware, async (req, res) => {
 /**
  * @route DELETE /chat/conversation/:conversation_id
  * @desc Delete a conversation
- * @access Private
+ * @access Private (JWT or API Key)
  */
 router.delete(
   "/conversation/:conversation_id",
-  authMiddleware,
+  flexibleAuth,
   async (req, res) => {
     try {
       const conversation_id = req.params.conversation_id;

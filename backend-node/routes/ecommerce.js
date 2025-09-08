@@ -2,6 +2,7 @@ import express from "express";
 import { v4 as uuidv4 } from "uuid";
 import { User, Product, Weaver, Transaction } from "../models/models.js";
 import { authMiddleware } from "../middleware/auth.js";
+import flexibleAuth from "../middleware/flexible-auth.js";
 
 const router = express.Router();
 
@@ -55,7 +56,7 @@ router.get("/products/:product_id", async (req, res) => {
  * @desc Create a new transaction to buy a product
  * @access Private
  */
-router.post("/buy", authMiddleware, async (req, res) => {
+router.post("/buy", flexibleAuth, async (req, res) => {
   try {
     const { product_id, address, phone_number } = req.body;
     const user_id = req.user.id;
@@ -118,7 +119,7 @@ router.post("/buy", authMiddleware, async (req, res) => {
  * @desc Get payment details for a transaction
  * @access Private
  */
-router.get("/payment/:transaction_id", authMiddleware, async (req, res) => {
+router.get("/payment/:transaction_id", flexibleAuth, async (req, res) => {
   try {
     const transaction_id = req.params.transaction_id;
     const user_id = req.user.id;
@@ -162,7 +163,7 @@ router.get("/payment/:transaction_id", authMiddleware, async (req, res) => {
  */
 router.post(
   "/payment/:transaction_id/confirm",
-  authMiddleware,
+  flexibleAuth,
   async (req, res) => {
     try {
       const transaction_id = req.params.transaction_id;
@@ -182,11 +183,9 @@ router.post(
       }
 
       if (transaction.status !== "pending_payment") {
-        return res
-          .status(400)
-          .json({
-            error: `Cannot confirm payment for transaction in ${transaction.status} status`,
-          });
+        return res.status(400).json({
+          error: `Cannot confirm payment for transaction in ${transaction.status} status`,
+        });
       }
 
       // Update transaction status
@@ -215,7 +214,7 @@ router.post(
  * @desc Get all transactions for the current user
  * @access Private
  */
-router.get("/transactions/user", authMiddleware, async (req, res) => {
+router.get("/transactions/user", flexibleAuth, async (req, res) => {
   try {
     const user_id = req.user.id;
 
@@ -254,7 +253,7 @@ router.get("/transactions/user", authMiddleware, async (req, res) => {
  * @desc Track an order
  * @access Private
  */
-router.get("/track/:transaction_id", authMiddleware, async (req, res) => {
+router.get("/track/:transaction_id", flexibleAuth, async (req, res) => {
   try {
     const transaction_id = req.params.transaction_id;
     const user_id = req.user.id;

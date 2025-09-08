@@ -1,6 +1,7 @@
 import express from "express";
 import { User } from "../models/models.js";
 import { authMiddleware } from "../middleware/auth.js";
+import flexibleAuth from "../middleware/flexible-auth.js";
 
 const router = express.Router();
 
@@ -11,9 +12,9 @@ const MAX_TEXT_LENGTH = 5000;
 /**
  * @route POST /translate
  * @desc Translate Sumba text to target language
- * @access Private
+ * @access Private (JWT or API Key)
  */
-router.post("/", authMiddleware, async (req, res) => {
+router.post("/", flexibleAuth, async (req, res) => {
   try {
     const { sumba_text, target_language, context } = req.body;
     const user_id = req.user.id;

@@ -1,43 +1,47 @@
-import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
 
-// Secret key for JWT signing and verification
-const JWT_SECRET = process.env.JWT_SECRET || "inasumba-jwt-secret-key";
+// Load environment variables
+dotenv.config();
+
+// API key for direct access
+const API_KEY = process.env.API_KEY || "inasumba-api-key";
 
 /**
- * Middleware to verify JWT token
+ * Middleware to verify API key
  */
 export const authMiddleware = (req, res, next) => {
-  // Get token from header
-  const token = req.header("x-auth-token");
+  // Get API key from header
+  const apiKey = req.header("x-api-key");
 
-  // Check if token exists
-  if (!token) {
-    return res.status(401).json({ error: "No token, authorization denied" });
+  // Check if API key exists and matches
+  if (!apiKey) {
+    return res.status(401).json({ error: "No API key, authorization denied" });
   }
 
-  try {
-    // Verify token
-    const decoded = jwt.verify(token, JWT_SECRET);
-
-    // Add user from payload to request object
-    req.user = decoded;
-    next();
-  } catch (error) {
-    res.status(401).json({ error: "Token is not valid" });
+  if (apiKey !== API_KEY) {
+    return res.status(401).json({ error: "Invalid API key" });
   }
+
+  // Add a default user to request object
+  req.user = {
+    id: process.env.DEFAULT_USER_ID || "APIUSER",
+    name: "API User",
+    role: "api",
+  };
+
+  next();
 };
 
 /**
- * Generate JWT token
- * @param {Object} payload - The data to be encoded in the token
- * @returns {string} The JWT token
+ * Generate API key for client
+ * @returns {string} The API key
  */
-export const generateToken = (payload) => {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: "24h" });
+export const generateApiKey = () => {
+  return API_KEY;
 };
 
 export default {
   authMiddleware,
-  generateToken,
-  JWT_SECRET,
+  generateApiKey,
+  API_KEY,
 };
