@@ -68,10 +68,14 @@ Important guidelines:
 3. Maintain the tone and formality of the original text
 4. If you're unsure about certain words, provide the best approximation and note any uncertainty
 
-Please respond with a JSON object containing:
-- "translated_text": the translation
-- "cultural_notes": any important cultural context or explanations
-- "confidence": a number between 0 and 1 indicating translation confidence`;
+IMPORTANT: You must respond with ONLY a valid JSON object in this exact format:
+{
+  "translated_text": "your translation here as a single string",
+  "cultural_notes": "any cultural context or explanations as a single string",
+  "confidence": 0.85
+}
+
+Do not include any other text, explanations, or formatting outside of this JSON object.`;
 
       // Call OpenAI API
       const completion = await openai.chat.completions.create({
@@ -91,20 +95,75 @@ Please respond with a JSON object containing:
 
       const aiResponse = completion.choices[0].message.content;
 
+      // Ensure we have a valid response
+      if (!aiResponse) {
+        throw new Error("Empty response from OpenAI");
+      }
+
       // Try to parse JSON response
       let translatedText, culturalNotes, confidence;
       try {
-        const parsedResponse = JSON.parse(aiResponse);
-        translatedText = parsedResponse.translated_text || aiResponse;
-        culturalNotes =
-          parsedResponse.cultural_notes ||
-          "Translation completed using AI assistance";
-        confidence = parsedResponse.confidence || 0.85;
+        // Clean the response in case there are extra characters
+        let cleanResponse = aiResponse.trim();
+
+        // Remove potential markdown code block formatting
+        if (cleanResponse.startsWith("```json")) {
+          cleanResponse = cleanResponse
+            .replace(/^```json\s*/, "")
+            .replace(/\s*```$/, "");
+        } else if (cleanResponse.startsWith("```")) {
+          cleanResponse = cleanResponse
+            .replace(/^```\s*/, "")
+            .replace(/\s*```$/, "");
+        }
+
+        const parsedResponse = JSON.parse(cleanResponse);
+
+        // Ensure translated_text is a string, not an object
+        if (typeof parsedResponse.translated_text === "string") {
+          translatedText = parsedResponse.translated_text;
+        } else if (typeof parsedResponse.translated_text === "object") {
+          // If it's an object, convert to string representation
+          console.warn(
+            "OpenAI returned object for translated_text:",
+            parsedResponse.translated_text
+          );
+          translatedText = JSON.stringify(parsedResponse.translated_text);
+        } else if (parsedResponse.translated_text) {
+          translatedText = String(parsedResponse.translated_text);
+        } else {
+          throw new Error("No translated_text found in response");
+        }
+
+        // Ensure cultural_notes is a string
+        if (typeof parsedResponse.cultural_notes === "string") {
+          culturalNotes = parsedResponse.cultural_notes;
+        } else {
+          culturalNotes = "Translation completed using AI assistance";
+        }
+
+        // Ensure confidence is a number
+        confidence =
+          typeof parsedResponse.confidence === "number"
+            ? parsedResponse.confidence
+            : 0.85;
       } catch (parseError) {
-        // If JSON parsing fails, use the raw response
-        translatedText = aiResponse;
-        culturalNotes = "Translation completed using AI assistance";
-        confidence = 0.8;
+        console.warn(
+          "Failed to parse OpenAI response as JSON:",
+          parseError.message
+        );
+        console.warn("Raw response:", aiResponse);
+
+        // If JSON parsing fails, use the raw response as string
+        // Make sure it's a string, not an object
+        if (typeof aiResponse === "object") {
+          translatedText = JSON.stringify(aiResponse);
+        } else {
+          translatedText = String(aiResponse);
+        }
+        culturalNotes =
+          "Translation completed using AI assistance (fallback response)";
+        confidence = 0.7;
       }
 
       const processingTime = (new Date() - startTime) / 1000;

@@ -21,35 +21,6 @@ export default function ProfilePage() {
   
 
   useEffect(() => {
-    const loadProfile = async () => {
-      if (!userId) {
-        setIsLoading(false)
-        toast({
-          title: "User Not Found",
-          description: "No user ID found. Please sign in again.",
-          variant: "destructive",
-        })
-        return
-      }
-      try {
-        const profileData = await getProfile(userId)
-        setProfile(profileData)
-      } catch (error) {
-        console.error("Failed to load profile:", error)
-        toast({
-          title: "Loading Failed",
-          description: "Unable to load profile information",
-          variant: "destructive",
-        })
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    loadProfile()
-  }, [toast, userId])
-
-  useEffect(() => {
     const isLoggedIn = localStorage.getItem("isLoggedIn")
     const storedUserId = localStorage.getItem("user_id")
 
@@ -66,15 +37,43 @@ export default function ProfilePage() {
     setUserId(storedUserId)
   }, [router, toast])
 
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (!userId) {
+        return // Don't show error yet, wait for userId to be set
+      }
+      
+      try {
+        setIsLoading(true)
+        const profileData = await getProfile(userId)
+        setProfile(profileData)
+      } catch (error) {
+        console.error("Failed to load profile:", error)
+        toast({
+          title: "Loading Failed",
+          description: "Unable to load profile information",
+          variant: "destructive",
+        })
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    if (userId) {
+      loadProfile()
+    }
+  }, [toast, userId])
+
 
   const handleProfileUpdate = (updatedProfile: ProfileResponse) => {
     setProfile(updatedProfile)
   }
 
   const handleLogout = () => {
-    // Clear any stored authentication data
-    // In a real app, you would clear tokens, cookies, etc.
+    // Clear all stored authentication data
     localStorage.removeItem("user_token")
+    localStorage.removeItem("user_id")
+    localStorage.removeItem("isLoggedIn")
     sessionStorage.clear()
 
     toast({
@@ -82,7 +81,7 @@ export default function ProfilePage() {
       description: "You have been successfully signed out",
     })
 
-    // Redirect to home page or login page
+    // Redirect to login page
     router.push("/login")
   }
 
