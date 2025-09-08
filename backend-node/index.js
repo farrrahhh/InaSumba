@@ -8,7 +8,7 @@ import * as models from "./models/models.js";
 import authRoutes from "./routes/authentication.js";
 import profileRoutes from "./routes/profile.js";
 
-// Inisialisasi Express
+// Initialize Express
 const app = express();
 
 // Middleware
@@ -23,7 +23,7 @@ const pool = new pg.Pool({
   password: "apnUrfnbMlLhHMnQvkCuZsIvLxSbwlDA",
   port: 10797,
   ssl: {
-    rejectUnauthorized: false, // biar konek ke Railway
+    rejectUnauthorized: false, // for Railway connection
   },
 });
 
@@ -32,11 +32,19 @@ app.get("/", (req, res) => {
   res.send("API is running");
 });
 
+// Health check endpoint
+app.get("/api/health", (req, res) => {
+  res.status(200).json({
+    status: "healthy",
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // Register routes
 app.use("/auth", authRoutes);
 app.use("/profile", profileRoutes);
 
-// Contoh endpoint: cek koneksi database
+// Database connection check endpoint
 app.get("/db-check", async (req, res) => {
   try {
     const result = await pool.query("SELECT NOW()");
@@ -47,24 +55,23 @@ app.get("/db-check", async (req, res) => {
   }
 });
 
-// Port (default 3000 untuk lokal, Vercel pakai process.env.PORT)
-const PORT = process.env.PORT || 3000;
-
-// Sync database and start server
-const initializeDatabase = async () => {
-  try {
-    // Sync all models with database
-    await sequelize.sync({ alter: false });
+// Sync database
+sequelize
+  .sync({ alter: false })
+  .then(() => {
     console.log("Database synchronized successfully");
-
-    // Start server after database sync
-    app.listen(PORT, () => {
-      console.log(`Server running on http://localhost:${PORT}`);
-    });
-  } catch (error) {
+  })
+  .catch((error) => {
     console.error("Failed to sync database:", error);
-  }
-};
+  });
 
-// Initialize the database and start the server
-initializeDatabase();
+// For local development only (not used in Vercel)
+if (process.env.NODE_ENV !== "production") {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+  });
+}
+
+// Export the Express app for Vercel
+export default app;
