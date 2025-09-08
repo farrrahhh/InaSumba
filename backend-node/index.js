@@ -20,6 +20,7 @@ const corsOptions = {
     "http://localhost:3000",
     "http://localhost:3001",
     "https://inasumba.vercel.app",
+    "https://ina-sumba.vercel.app"
   ],
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
