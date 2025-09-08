@@ -3,10 +3,15 @@ import cors from "cors";
 import bodyParser from "body-parser";
 import pg from "pg";
 import bcrypt from "bcryptjs";
+import { Op } from "sequelize";
 import sequelize from "./config/database.js";
 import * as models from "./models/models.js";
 import authRoutes from "./routes/authentication.js";
 import profileRoutes from "./routes/profile.js";
+import chatRoutes from "./routes/chat.js";
+import translatorRoutes from "./routes/translator.js";
+import classifierRoutes from "./routes/classifier.js";
+import ecommerceRoutes from "./routes/ecommerce.js";
 
 // Initialize Express
 const app = express();
@@ -43,6 +48,10 @@ app.get("/api/health", (req, res) => {
 // Register routes
 app.use("/auth", authRoutes);
 app.use("/profile", profileRoutes);
+app.use("/chat", chatRoutes);
+app.use("/translator", translatorRoutes);
+app.use("/classifier", classifierRoutes);
+app.use("/ecommerce", ecommerceRoutes);
 
 // Database connection check endpoint
 app.get("/db-check", async (req, res) => {
